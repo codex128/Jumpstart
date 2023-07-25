@@ -16,9 +16,10 @@ A game I'm coding to practice handling animations smoothly and consistantly in J
 * Smooth walk direction interpolation using Quaternions instead of `FastMath.interpolateLinear`.
 
 ## Todo
-* Jumping (framework is setup but untested, waiting on proper animations)
-* Grab some more animations :D
+* Jumping (framework is setup but untested, waiting on proper animations).
+* Grab some more animations. :D
 * Movement speed falloff, instead of instantaneous stopping.
+* Specific fall impact animation when the character is moving fast.
 
 ## Dependencies
 * JMonkeyEngine
