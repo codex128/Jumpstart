@@ -25,9 +25,8 @@ public class Main extends SimpleApplication {
     public static void main(String[] args) {
         Main app = new Main();
         var settings = new AppSettings(true);
-        settings.setFrameRate(120);
         settings.setFrequency(120);
-        settings.setVSync(false);
+        settings.setVSync(true);
         settings.setWidth(1024);
         settings.setHeight(768);
         app.setSettings(settings);

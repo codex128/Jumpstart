@@ -7,6 +7,7 @@ package codex.jumpstart;
 import com.jme3.anim.AnimComposer;
 import com.jme3.anim.AnimLayer;
 import com.jme3.anim.AnimationMask;
+import com.jme3.anim.tween.action.Action;
 
 /**
  *
@@ -17,6 +18,7 @@ public class LayerController {
     private final String layer;
     private AnimComposer anim;
     private AnimationMask mask;
+    private boolean resetProtection = true;
     
     public LayerController(String layer) {
         this.layer = layer;
@@ -28,8 +30,9 @@ public class LayerController {
     
     public void enter(String action) {
         if (anim == null) return;
-        System.out.println("enter action \""+action+"\"");
-        getLayer().setCurrentAction(anim.action(action));
+        Action run = anim.action(action);
+        if (resetProtection && run == getLayer().getCurrentAction()) return;
+        getLayer().setCurrentAction(run);
     }
     public void exit() {
         if (!isActive()) return;
@@ -44,6 +47,18 @@ public class LayerController {
             return;
         }
         anim.makeLayer(layer, mask);
+    }
+    
+    /**
+     * Reset protection ensures that an action does not
+     * get interrupted by entering the same action.
+     * <p>Is useful if it is more convenient to constantly enter
+     * an animation instead of entering it once.
+     * <p>Default=true
+     * @param enable 
+     */
+    public void enableResetProtection(boolean enable) {
+        resetProtection = enable;
     }
     
     public boolean isActive() {

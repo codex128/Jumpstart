@@ -90,12 +90,15 @@ public class AnimLayerControl extends SubControl<AnimComposer> {
         return controllers.get(layer);
     }
     
-    // methods for using Tweens.callMethod(...)
+    // fast-access methods
     public void enter(String layer, String action) {
         get(layer).enter(action);
     }
     public void exit(String layer) {
         get(layer).exit();
+    }
+    public boolean isActive(String layer) {
+        return get(layer).isActive();
     }
     
 }

@@ -11,6 +11,7 @@ import codex.jmeutil.scene.SceneGraphIterator;
 import com.jme3.anim.AnimComposer;
 import com.jme3.anim.SkinningControl;
 import com.jme3.anim.tween.Tweens;
+import com.jme3.anim.tween.action.Action;
 import com.jme3.anim.tween.action.BaseAction;
 import com.jme3.anim.tween.action.BlendAction;
 import com.jme3.anim.tween.action.ClipAction;
@@ -20,7 +21,6 @@ import com.jme3.bullet.BulletAppState;
 import com.jme3.bullet.PhysicsSpace;
 import com.jme3.bullet.control.BetterCharacterControl;
 import com.jme3.bullet.control.RigidBodyControl;
-import com.jme3.collision.CollisionResults;
 import com.jme3.environment.EnvironmentCamera;
 import com.jme3.environment.LightProbeFactory;
 import com.jme3.environment.generation.JobProgressAdapter;
@@ -30,7 +30,6 @@ import com.jme3.light.LightProbe;
 import com.jme3.math.ColorRGBA;
 import com.jme3.math.FastMath;
 import com.jme3.math.Quaternion;
-import com.jme3.math.Ray;
 import com.jme3.math.Vector3f;
 import com.jme3.renderer.queue.RenderQueue;
 import com.jme3.scene.Geometry;
@@ -64,10 +63,11 @@ public class GameState extends GameAppState implements
     private Vector3f inputdirection = new Vector3f();
     private final float walkspeed = 2f;
     private final float runspeed = 10f;
+    private final float sneakspeed = 1f;
     private float speedfactor = 0f;
     private final float impactThreshold = 6f;
-    private final float maxPushAngle = FastMath.PI*.1f;
     private boolean sprinting = !false;
+    private boolean sneaking = false;
     
     @Override
     protected void init(Application app) {
@@ -97,50 +97,51 @@ public class GameState extends GameAppState implements
             movement.setWalkDirection(FastMath.interpolateLinear(.1f, movement.getWalkDirection(new Vector3f()), walkDir.normalizeLocal()));
         }
         movement.setWalkSpeed(Math.max(FastMath.abs(inputdirection.z), FastMath.abs(inputdirection.x))*getMoveSpeed());
-        if (control.isOnGround() && movement.getWalkSpeed() > 0f) {
-            movement.getWalkDirection(walkDir);
-            var ray = new Ray(control.getRigidBody().getPhysicsLocation().addLocal(0f, 2f, 0f), walkDir);
-            var results = new CollisionResults();
-            var it = new SceneGraphIterator(scene);
-            for (Spatial spatial : it) {
-                if (spatial == control.getSpatial()) {
-                    it.ignoreChildren();
-                    continue;
-                }
-                if (spatial instanceof Geometry) {
-                    spatial.collideWith(ray, results);
-                }
-            }
-            if (results.size() > 0) {
-                var closest = results.getClosestCollision();
-                if (closest.getDistance() <= control.getRadius()+0.01f) {
-                    control.getRigidBody().setLinearVelocity(control.getRigidBody().getLinearVelocity().negateLocal().multLocal(10f));
-                }
-            }
+        if (!control.isOnGround() && !layerControl.isActive("jump")) {
+            // trigger the falling loop if the jump layer is not active
+            // this makes "falling" a default when not on the ground
+            //layerControl.enter("jump", "falling-loop");
         }
         inputdirection.set(0f, 0f, 0f);
     }
     @Override
     public void valueActive(FunctionId func, double value, double tpf) {
-        if (!layerControl.get("landing").isActive() && !layerControl.get("gun").isActive()) {
+        if (!layerControl.isActive("jump") && !layerControl.isActive("gun")) {
             if (func == Functions.F_WALK) {
                 inputdirection.z = FastMath.sign((float)value);
             }
             else if (func == Functions.F_STRAFE) {
                 inputdirection.x = FastMath.sign((float)value);
             }
-            if (sprinting && (speedfactor += tpf) > 1f) {
+            if (!sneaking && sprinting && (speedfactor += tpf) > 1f) {
                 speedfactor = 1f;
             }
-            else if (!sprinting && (speedfactor -= tpf) < 0f) {
+            else if ((sneaking || !sprinting) && (speedfactor -= tpf) < 0f) {
                 speedfactor = 0f;
             }
         }
     }    
     @Override
     public void valueChanged(FunctionId func, InputState value, double tpf) {
-        if (func == Functions.F_SPRINT) {
+        if (func == Functions.F_SPRINT && value == InputState.Positive) {
             //sprinting = value == InputState.Positive;
+            // repurposing sprint function for sneaking temporarily
+            sneaking = !sneaking;
+            control.setDucked(sneaking);
+            if (sneaking) {
+                if (movement.getWalkSpeed() > 0f) {
+                    layerControl.enter("move", "sneaking");
+                }
+            }
+            else {
+                layerControl.enter("idle", "idle");
+                if (movement.getWalkSpeed() > 0f) {
+                    layerControl.enter("move", "walk->run");
+                }
+                else {
+                    layerControl.exit("move");
+                }
+            }
         }
         else if (func == Functions.F_SHOOT) {
             if (!layerControl.get("gun").isActive() && value == InputState.Positive) {
@@ -152,15 +153,8 @@ public class GameState extends GameAppState implements
                 orbital.setEnabled(true);
             }
         }
-        else if (func == Functions.F_JUMP && value == InputState.Positive) {
-            System.out.println("jump! "+FastMath.rand.nextInt(100));
-            if (control.isOnGround()) {
-                System.out.println("  jumped!");
-                control.jump();
-            }
-            else {
-                System.out.println("  did not jump");
-            }
+        else if (func == Functions.F_JUMP && value == InputState.Positive && control.isOnGround()) {
+            control.jump();
         }
     }
     @Override
@@ -173,7 +167,8 @@ public class GameState extends GameAppState implements
             return;
         }
         if (oldSpeed == 0f) {
-            layerControl.enter("move", "walk->run");
+            if (sneaking) layerControl.enter("move", "sneaking");
+            else layerControl.enter("move", "walk->run");
         }
         ((BlendAction)anim.action("walk->run")).getBlendSpace().setValue(speedfactor);
     }
@@ -182,7 +177,7 @@ public class GameState extends GameAppState implements
         float hi = oldVel.y;
         float low = newVel.y;
         if (FastMath.abs(low) < .001f && hi < -impactThreshold) {
-            layerControl.enter("landing", "land-once");
+            layerControl.enter("jump", "land-once");
             speedfactor = 0f;
         }
     }
@@ -221,7 +216,7 @@ public class GameState extends GameAppState implements
         ybot.addControl(movement);
         scene.attachChild(ybot);
         control.warp(startLocation);
-        getPhysicsSpace().setGravity(new Vector3f(0f, -100f, 0f));
+        getPhysicsSpace().setGravity(new Vector3f(0f, -50f, 0f));
         return ybot;
     }
     private void initIllumination() {
@@ -272,15 +267,17 @@ public class GameState extends GameAppState implements
         layerControl = new AnimLayerControl(AnimComposer.class);
         anim.getSpatial().addControl(layerControl);
         AlertArmatureMask allJoints = AlertArmatureMask.all("idle", anim, skin);
-        layerControl.createSet(anim, skin, mask -> mask.addAll(), "idle", "move", "gun", "landing");
+        layerControl.createSet(anim, skin, mask -> mask.addAll(), "idle", "move", "gun", "jump");
         layerControl.create("idle", allJoints);
         var idle = (ClipAction)anim.action("idle");
         idle.setMaxTransitionWeight(.5f);
         layerControl.enter("idle", "idle");
+        ((ClipAction)anim.action("walk")).setMaxTransitionWeight(.9f);
+        ((ClipAction)anim.action("sprint")).setMaxTransitionWeight(.9f);
         anim.actionBlended("walk->run", new LinearBlendSpace(0f, 1f), "walk", "sprint");
         anim.actionSequence("land-once",
             anim.action("landing"),
-            Tweens.callMethod(layerControl, "exit", "landing")
+            Tweens.callMethod(layerControl, "exit", "jump")
         );
         anim.addAction("shoot-cycle", new BaseAction(
             Tweens.sequence(
@@ -299,6 +296,7 @@ public class GameState extends GameAppState implements
             Tweens.invert(anim.action("draw-pistol")),
             Tweens.callMethod(layerControl, "exit", "gun")
         ).setSpeed(3);
+        anim.action("sneaking").setSpeed(.5);
         
         // theoretical animation setup
 //        anim.addAction("hi-jump-once", new BaseAction(
@@ -325,7 +323,8 @@ public class GameState extends GameAppState implements
     }
     
     private float getMoveSpeed() {
-        return FastMath.interpolateLinear(speedfactor, walkspeed, runspeed);
+        if (!sneaking) return FastMath.interpolateLinear(speedfactor, walkspeed, runspeed);
+        return sneakspeed;
     }
     private PhysicsSpace getPhysicsSpace() {
         return getState(BulletAppState.class, true).getPhysicsSpace();
