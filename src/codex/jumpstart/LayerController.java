@@ -75,4 +75,9 @@ public class LayerController {
         return layer;
     }
     
+    @Override
+    public String toString() {
+        return "LayerController[layer="+layer+"]";
+    }
+    
 }

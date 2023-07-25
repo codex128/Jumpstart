@@ -4,8 +4,8 @@
  */
 package codex.jumpstart;
 
-import codex.jmeutil.control.SubControl;
-import codex.jmeutil.listen.Listenable;
+import codex.boost.Listenable;
+import codex.boost.control.SubControl;
 import com.jme3.bullet.control.BetterCharacterControl;
 import com.jme3.math.FastMath;
 import com.jme3.math.Vector3f;

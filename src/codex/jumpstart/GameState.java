@@ -4,14 +4,13 @@
  */
 package codex.jumpstart;
 
+import codex.boost.GameAppState;
+import codex.boost.camera.OrbitalCamera;
+import codex.boost.scene.SceneGraphIterator;
 import codex.j3map.J3map;
-import codex.jmeutil.GameAppState;
-import codex.jmeutil.character.OrbitalCamera;
-import codex.jmeutil.scene.SceneGraphIterator;
 import com.jme3.anim.AnimComposer;
 import com.jme3.anim.SkinningControl;
 import com.jme3.anim.tween.Tweens;
-import com.jme3.anim.tween.action.Action;
 import com.jme3.anim.tween.action.BaseAction;
 import com.jme3.anim.tween.action.BlendAction;
 import com.jme3.anim.tween.action.ClipAction;
@@ -63,7 +62,7 @@ public class GameState extends GameAppState implements
     private Vector3f inputdirection = new Vector3f();
     private final float walkspeed = 2f;
     private final float runspeed = 10f;
-    private final float sneakspeed = 1f;
+    private final float sneakspeed = 1.6f;
     private float speedfactor = 0f;
     private final float impactThreshold = 6f;
     private boolean sprinting = !false;
@@ -213,7 +212,7 @@ public class GameState extends GameAppState implements
         control = createCharacter(character);
         ybot.addControl(control);
         getPhysicsSpace().add(control);
-        control.getRigidBody().setCcdMotionThreshold(3);
+        control.getRigidBody().setCcdMotionThreshold(.1f);
         movement = new CharacterMovementControl(BetterCharacterControl.class);
         movement.setFaceWalkDirection(true);
         movement.addListener(this);
@@ -300,7 +299,7 @@ public class GameState extends GameAppState implements
             Tweens.invert(anim.action("draw-pistol")),
             Tweens.callMethod(layerControl, "exit", "gun")
         ).setSpeed(3);
-        anim.action("sneaking").setSpeed(.5);
+        anim.action("sneaking").setSpeed(.7);
         
         // theoretical animation setup
 //        anim.addAction("hi-jump-once", new BaseAction(

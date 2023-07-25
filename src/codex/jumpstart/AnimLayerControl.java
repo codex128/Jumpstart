@@ -4,7 +4,7 @@
  */
 package codex.jumpstart;
 
-import codex.jmeutil.control.SubControl;
+import codex.boost.control.SubControl;
 import com.jme3.anim.AnimComposer;
 import com.jme3.anim.AnimationMask;
 import com.jme3.anim.SkinningControl;
