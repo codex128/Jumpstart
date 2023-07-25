@@ -27,4 +27,6 @@ A game I'm coding to practice handling animations smoothly and consistantly in J
 * [Minie](https://github.com/stephengold/Minie) (latest version is highly suggested)
 * [J3map](https://github.com/codex128/J3map)
 * [Boost](https://github.com/codex128/Boost)
-* [Jumpstart Assets](https://github.com/codex128/JumpstartAssetKit) (code would have to be modified to point to where these assets are stored).
+* [Jumpstart Assets](https://github.com/codex128/JumpstartAssetKit)
+
+In order to encorporate Jumpstart Assets, you must add an asset locator pointing to the assets folder.
