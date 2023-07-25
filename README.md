@@ -10,8 +10,15 @@ A game I'm coding to practice handling animations smoothly and consistantly in J
 * Crouching (moving and idle, but missing idle animation)
 * Draw pistol, shoot, and holster (currently incompatible with movement)
 
+## Code Features
+* Animation utility.
+* Character movement utility.
+* Smooth walk direction interpolation using Quaternions instead of `FastMath.interpolateLinear`.
+
 ## Todo
-* Jumping (framework is setup, just missing the proper animations to test)
+* Jumping (framework is setup but untested, waiting on proper animations)
+* Grab some more animations :D
+* Movement speed falloff, instead of instantaneous stopping.
 
 ## Dependencies
 * JMonkeyEngine
