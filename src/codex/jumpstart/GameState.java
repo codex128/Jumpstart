@@ -94,7 +94,10 @@ public class GameState extends GameAppState implements
             walkDir.set(rotation.getRotationColumn(2));
             walkDir.multLocal(inputdirection.z);
             walkDir.addLocal(rotation.getRotationColumn(0).multLocal(-inputdirection.x));
-            movement.setWalkDirection(FastMath.interpolateLinear(.1f, movement.getWalkDirection(new Vector3f()), walkDir.normalizeLocal()));
+            Quaternion currentDir = new Quaternion().lookAt(movement.getWalkDirection(new Vector3f()), Vector3f.UNIT_Y);
+            Quaternion desiredDir = new Quaternion().lookAt(walkDir.normalizeLocal(), Vector3f.UNIT_Y);
+            currentDir.nlerp(desiredDir, .1f);
+            movement.setWalkDirection(currentDir.mult(Vector3f.UNIT_Z));
         }
         movement.setWalkSpeed(Math.max(FastMath.abs(inputdirection.z), FastMath.abs(inputdirection.x))*getMoveSpeed());
         if (!control.isOnGround() && !layerControl.isActive("jump")) {
@@ -210,6 +213,7 @@ public class GameState extends GameAppState implements
         control = createCharacter(character);
         ybot.addControl(control);
         getPhysicsSpace().add(control);
+        control.getRigidBody().setCcdMotionThreshold(3);
         movement = new CharacterMovementControl(BetterCharacterControl.class);
         movement.setFaceWalkDirection(true);
         movement.addListener(this);
