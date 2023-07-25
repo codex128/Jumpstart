@@ -3,6 +3,16 @@ A game I'm coding to practice handling animations smoothly and consistantly in J
 
 ![progress screenshot](https://github.com/codex128/Jumpstart/blob/master/assets/Textures/progress1.png?raw=true)
 
+## Supported Actions
+* Idle
+* Walk --> Run (using BlendAction)
+* Fall impact
+* Crouching (moving and idle, but missing idle animation)
+* Draw pistol, shoot, and holster (currently incompatible with movement)
+
+## Todo
+* Jumping (framework is setup, just missing the proper animations to test)
+
 ## Dependencies
 * JMonkeyEngine
 * Lemur
