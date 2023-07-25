@@ -22,9 +22,9 @@ A game I'm coding to practice handling animations smoothly and consistantly in J
 * Specific fall impact animation when the character is moving fast.
 
 ## Dependencies
-* JMonkeyEngine
-* Lemur
-* Minie
-* J3map
-* JmeUtilityLibrary (for now, this library will probably be deprecated and replaced with something else)
+* [JMonkeyEngine](https://jmonkeyengine.org/) (or on [GitHub](https://github.com/jMonkeyEngine/jmonkeyengine))
+* [Lemur 1.16+](https://github.com/jMonkeyEngine-Contributions/Lemur)
+* [Minie](https://github.com/stephengold/Minie) (latest version is highly suggested)
+* [J3map](https://github.com/codex128/J3map)
+* [Boost](https://github.com/codex128/Boost)
 * [Jumpstart Assets](https://github.com/codex128/JumpstartAssetKit) (code would have to be modified to point to where these assets are stored).
