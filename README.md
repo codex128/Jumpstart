@@ -1,6 +1,8 @@
 # Jumpstart
 A game I'm coding to practice handling animations smoothly and consistantly in JMonkeyEngine.
 
+![progress screenshot](https://github.com/codex128/Jumpstart/blob/master/assets/Textures/progress1.png?raw=true)
+
 ## Dependencies
 * JMonkeyEngine
 * Lemur
