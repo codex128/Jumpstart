@@ -1,0 +1,22 @@
+ShaderNodeDefinitions{ 
+    ShaderNodeDefinition ColorReplace {      
+        Type: Fragment
+
+        Shader GLSL100: Shaders/ColorReplace100.frag
+        
+        Documentation{
+            If the input color matches the replacement color, then the replacement color is returned.
+Otherwise, the input color is returned.            
+            @input   
+            @input   
+            @input   
+            @input   
+        }
+        Input {
+            
+        }
+        Output {
+            
+        }
+    }
+}

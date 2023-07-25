@@ -1,0 +1,45 @@
+ShaderNodeDefinitions{ 
+    ShaderNodeDefinition PbrVertexShader {      
+        Type: Vertex
+
+        Shader GLSL110: MatDefs/PbrVert110.vert
+        
+        Documentation{
+                        
+            @input vec3 modelPosition the vertex position in model space (usually assigned with Attr.inPosition or Global.position)
+            @input mat4 worldViewProjectionMatrix the World View Projection Matrix transforms model space to projection space
+            @input mat4 worldNormalMatrix the World View Normal Matrix transforms model space to world space
+            @input vec2 texCoord1 The first texture coordinates of the vertex (usually assigned with Attr.inTexCoord)
+            @input vec2 texCoord2 The second texture coordinates of the vertex (usually assigned with Attr.inTexCoord2)
+            @input vec4 vertColor The color of the vertex (output as a varying)
+            @input vec3 normal Normal of the vertex (usually assigned with Attr.inNormal)
+            @input vec4 tangent Tangent of the vertex (usually assigned with Attr.inTangent)
+ 
+            @output vec4 projPosition Position of the vertex in projection space.(usually assigned to Global.position)
+            @output vec2 texCoord1 The first texture coordinates of the vertex (output as a varying)
+            @output vec2 texCoord2 The second texture coordinates of the vertex (output as a varying)
+            @output vec4 vertColor The color of the vertex (output as a varying)
+            @output vec3 projNormal Normal of vertex in projection space
+            @output vec4 projTangent Tangent of vertex in projection space
+        }
+        Input {
+            vec3 modelPosition
+            mat4 worldViewProjectionMatrix
+            mat3 worldNormalMatrix
+            vec2 texCoord1
+            vec2 texCoord2
+            vec4 vertColor
+            vec3 normal
+            vec4 tangent
+             
+        }
+        Output {
+             vec4 projPosition
+             vec2 texCoord1
+             vec2 texCoord2
+             vec4 vertColor
+             vec3 projNormal
+             vec4 projTangent
+        }
+    }
+}

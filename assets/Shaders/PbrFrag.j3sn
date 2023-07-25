@@ -1,0 +1,55 @@
+ShaderNodeDefinitions{ 
+    ShaderNodeDefinition PbrFragShader {      
+        Type: Fragment
+
+        Shader GLSL110: MatDefs/PbrFrag110.frag
+        
+        Documentation{
+                        
+            @input vec4 position 
+            @input vec3 cameraPosition 
+            @input float materialRoughness 
+            @input float materialMetallic 
+            @input vec2 texCoord1
+            @input vec2 texCoord2 
+            @input vec4 materialColor
+            @input sampler2D albedoMap 
+            @input sampler2D normalMap 
+            @input sampler2D metallicMap 
+            @input sampler2D roughnessMap 
+            @input sampler2D emissiveMap 
+            @input sampler2D lightMap 
+            @input vec4 tangent 
+            @input vec3 normal 
+            @input float normalType
+            @input vec4 emissiveColor
+            @input float emissiveIntensity
+            @input float emissivePower
+            @output vec4 outColor 
+        }
+        Input {
+            vec4 position
+            vec3 cameraPosition
+            float materialRoughness
+            float materialMetallic
+            vec2 texCoord1
+            vec2 texCoord2
+            vec4 materialColor
+            sampler2D albedoMap
+            sampler2D normalMap
+            sampler2D metallicMap
+            sampler2D roughnessMap
+            sampler2D emissiveMap
+            sampler2D lightMap
+            vec4 tangent
+            vec3 normal
+            float normalType
+            vec4 emissiveColor
+            float emissiveIntensity
+            float emissivePower
+        }
+        Output {
+             vec4 outColor
+        }
+    }
+}

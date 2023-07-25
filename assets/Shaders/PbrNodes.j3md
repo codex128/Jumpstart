@@ -1,0 +1,78 @@
+MaterialDef Simple {
+    MaterialParameters {
+        Boolean SeparateTexCoord
+        Float Metallic : 1
+        Float Roughness : 2
+        Color EmissiveColor : 1.0 1.0 1.0 1.0
+        Float EmissivePower : 0.5
+        Float EmissiveIntensity : 0.5
+        Color BaseColor : 0.0 0.4 0.4 1.0
+        Texture2D AlbedoMap : "Textures/displ_color.png"
+        Texture2D NormalMap : "Textures/displ_normal.png"
+        Texture2D LightMap
+        Texture2D RoughnessMap : "Textures/displ_height.png"
+        Texture2D MetallicMap
+        Texture2D EmissiveMap : "Textures/dots_height.png"
+        Float NormalType : -1.0
+    }
+    Technique {
+        LightMode SinglePassAndImageBased
+        Defines {
+            ALBEDOMAP : AlbedoMap
+            NORMALMAP : NormalMap
+            ROUGHNESSMAP : RoughnessMap
+            LIGHTMAP : LightMap
+            METALLICMAP : MetallicMap
+            EMISSIVEMAP : EmissiveMap
+        }
+        WorldParameters {
+            WorldViewProjectionMatrix
+            WorldNormalMatrix
+            CameraPosition
+        }
+        VertexShaderNodes {
+            ShaderNode PbrVertexShader {
+                Definition : PbrVertexShader : MatDefs/PbrVert.j3sn
+                InputMappings {
+                    modelPosition = Global.position.xyz
+                    normal = Attr.inNormal.xyz
+                    tangent = Attr.inTangent
+                    worldViewProjectionMatrix = WorldParam.WorldViewProjectionMatrix
+                    worldNormalMatrix = WorldParam.WorldNormalMatrix
+                    texCoord1 = Attr.inTexCoord : AlbedoMap || (LightMap && !SeparateTexCoord)
+                    texCoord2 = Attr.inTexCoord2 : SeparateTexCoord
+                }
+                OutputMappings {
+                    Global.position = projPosition
+                }
+            }
+        }
+        FragmentShaderNodes {
+            ShaderNode PbrFragShader {
+                Definition : PbrFragShader : MatDefs/PbrFrag.j3sn
+                InputMappings {
+                    normal = PbrVertexShader.projNormal
+                    tangent = PbrVertexShader.projTangent
+                    materialRoughness = MatParam.Roughness
+                    materialMetallic = MatParam.Metallic
+                    normalType = MatParam.NormalType
+                    albedoMap = MatParam.AlbedoMap
+                    metallicMap = MatParam.MetallicMap
+                    roughnessMap = MatParam.RoughnessMap
+                    normalMap = MatParam.NormalMap
+                    emissiveMap = MatParam.EmissiveMap
+                    emissiveIntensity = MatParam.EmissiveIntensity
+                    emissivePower = MatParam.EmissivePower
+                    emissiveColor = MatParam.EmissiveColor
+                    materialColor = MatParam.BaseColor
+                    position = PbrVertexShader.projPosition
+                    cameraPosition = WorldParam.CameraPosition
+                    texCoord1 = PbrVertexShader.texCoord1
+                }
+                OutputMappings {
+                    Global.color = outColor
+                }
+            }
+        }
+    }
+}
