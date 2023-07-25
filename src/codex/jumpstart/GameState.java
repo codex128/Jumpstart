@@ -26,15 +26,20 @@ import com.jme3.environment.generation.JobProgressAdapter;
 import com.jme3.light.AmbientLight;
 import com.jme3.light.DirectionalLight;
 import com.jme3.light.LightProbe;
+import com.jme3.material.Material;
 import com.jme3.math.ColorRGBA;
 import com.jme3.math.FastMath;
 import com.jme3.math.Quaternion;
 import com.jme3.math.Vector3f;
+import com.jme3.renderer.RenderManager;
+import com.jme3.renderer.ViewPort;
 import com.jme3.renderer.queue.RenderQueue;
 import com.jme3.scene.Geometry;
 import com.jme3.scene.Node;
 import com.jme3.scene.Spatial;
+import com.jme3.scene.control.AbstractControl;
 import com.jme3.scene.control.Control;
+import com.jme3.scene.shape.Box;
 import com.jme3.shadow.DirectionalLightShadowRenderer;
 import com.jme3.util.SkyFactory;
 import com.simsilica.lemur.GuiGlobals;
@@ -55,6 +60,7 @@ public class GameState extends GameAppState implements
     
     private Node scene;
     private AnimComposer anim;
+    private SkinningControl skin;
     private AnimLayerControl layerControl;
     private CharacterMovementControl movement;
     private MyCharacterControl control;
@@ -67,6 +73,7 @@ public class GameState extends GameAppState implements
     private final float impactThreshold = 6f;
     private boolean sprinting = !false;
     private boolean sneaking = false;
+    private Spatial gun;
     
     @Override
     protected void init(Application app) {
@@ -77,6 +84,21 @@ public class GameState extends GameAppState implements
         initCamera(ybot);
         initAnimations();
         initInputs();
+        
+        gun = assetManager.loadModel("Models/weapons/M9Pistol.j3o");
+        gun.setLocalScale(50f);
+        gun.setLocalRotation(new Quaternion().lookAt(Vector3f.UNIT_Y.negate(), Vector3f.UNIT_X));
+        putGunInHolster();
+        
+//        Spatial holster = ((Node)anim.getSpatial()).getChild("holster");
+//        holster.addControl(new AbstractControl() {
+//            @Override
+//            protected void controlUpdate(float tpf) {r
+//                spatial.rotate(0f, tpf, 0f);
+//            }
+//            @Override
+//            protected void controlRender(RenderManager rm, ViewPort vp) {}
+//        });
         
     }
     @Override
@@ -148,11 +170,11 @@ public class GameState extends GameAppState implements
         else if (func == Functions.F_SHOOT) {
             if (!layerControl.get("gun").isActive() && value == InputState.Positive) {
                 layerControl.get("gun").enter("draw-pistol-once");
-                orbital.setEnabled(false);
+                //orbital.setEnabled(false);
             }
             else if (layerControl.get("gun").isActive() && value == InputState.Off) {
                 layerControl.get("gun").enter("holster-pistol-once");
-                orbital.setEnabled(true);
+                //orbital.setEnabled(true);
             }
         }
         else if (func == Functions.F_JUMP && value == InputState.Positive && control.isOnGround()) {
@@ -207,6 +229,7 @@ public class GameState extends GameAppState implements
     private Spatial initPlayer(Vector3f startLocation) {
         J3map character = (J3map)assetManager.loadAsset("Properties/YBot.j3map");
         Spatial ybot = assetManager.loadModel(character.getString("model"));
+        ybot.setCullHint(Spatial.CullHint.Never);
         ybot.setShadowMode(RenderQueue.ShadowMode.Cast);
         anim = fetchControl(ybot, AnimComposer.class);
         control = createCharacter(character);
@@ -266,7 +289,7 @@ public class GameState extends GameAppState implements
         GuiGlobals.getInstance().setCursorEventsEnabled(false);
     }
     private void initAnimations() {
-        var skin = anim.getSpatial().getControl(SkinningControl.class);
+        skin = anim.getSpatial().getControl(SkinningControl.class);
         layerControl = new AnimLayerControl(AnimComposer.class);
         anim.getSpatial().addControl(layerControl);
         AlertArmatureMask allJoints = AlertArmatureMask.all("idle", anim, skin);
@@ -275,49 +298,58 @@ public class GameState extends GameAppState implements
         var idle = (ClipAction)anim.action("idle");
         idle.setMaxTransitionWeight(.5f);
         layerControl.enter("idle", "idle");
-        ((ClipAction)anim.action("walk")).setMaxTransitionWeight(.9f);
-        ((ClipAction)anim.action("sprint")).setMaxTransitionWeight(.9f);
+        ((ClipAction)anim.action("walk")).setMaxTransitionWeight(.6);
+        ((ClipAction)anim.action("sprint")).setMaxTransitionWeight(.6);
         anim.actionBlended("walk->run", new LinearBlendSpace(0f, 1f), "walk", "sprint");
         anim.actionSequence("land-once",
             anim.action("landing"),
             Tweens.callMethod(layerControl, "exit", "jump")
         );
-        anim.addAction("shoot-cycle", new BaseAction(
+        ((ClipAction)anim.action("aim-pistol")).setMaxTransitionWeight(1);
+        anim.addAction("shoot-cycle", new BaseAction(Tweens.sequence(
+            Tweens.loopDuration(.1f, anim.action("aim-pistol")),
+            anim.action("shoot-pistol")
+        )));
+        ((ClipAction)anim.action("draw-pistol")).setMaxTransitionWeight(.2);
+        anim.addAction("draw-pistol-once", new BaseAction(Tweens.parallel(
             Tweens.sequence(
-                Tweens.loopDuration(
-                    .1f,
-                    anim.action("aim-pistol")
-                ),
-                anim.action("shoot-pistol")
+                anim.action("draw-pistol"),
+                Tweens.callMethod(layerControl, "enter", "gun", "shoot-cycle")
+            ),
+            Tweens.sequence(
+                Tweens.delay(.5f),
+                Tweens.callMethod(this, "putGunInHand")
             )
-        ));
-        anim.actionSequence("draw-pistol-once",
-            anim.action("draw-pistol"),
-            Tweens.callMethod(layerControl, "enter", "gun", "shoot-cycle")
-        ).setSpeed(3);
-        anim.actionSequence("holster-pistol-once",
-            Tweens.invert(anim.action("draw-pistol")),
-            Tweens.callMethod(layerControl, "exit", "gun")
-        ).setSpeed(3);
+        )));
+        anim.addAction("holster-pistol-once", new BaseAction(Tweens.parallel(
+            Tweens.sequence(
+                Tweens.invert(anim.action("draw-pistol")),
+                Tweens.callMethod(layerControl, "exit", "gun")
+            ),
+            Tweens.sequence(
+                Tweens.delay(1.5f),
+                Tweens.callMethod(this, "putGunInHolster")
+            )
+        )));
         anim.action("sneaking").setSpeed(.7);
         
         // theoretical animation setup
-//        anim.addAction("hi-jump-once", new BaseAction(
-//            Tweens.sequence(
-//                Tweens.parallel(
-//                    anim.action("jump"),
-//                    Tweens.sequence(
-//                        Tweens.delay(.1f),
-//                        Tweens.callMethod(control, "jump")
-//                    )
-//                ),
-//                Tweens.callMethod(layerControl, "enter", "jump", "jump-loop")
-//            )
-//        ));
-//        anim.actionSequence("long-jump-once",
-//            anim.action("running-jump"),
-//            Tweens.callMethod(layerControl, "enter", "jump", "jump-loop")
-//        );
+        /*anim.addAction("hi-jump-once", new BaseAction(
+            Tweens.sequence(
+                Tweens.parallel(
+                    anim.action("jump"),
+                    Tweens.sequence(
+                        Tweens.delay(.1f),
+                        Tweens.callMethod(control, "jump")
+                    )
+                ),
+                Tweens.callMethod(layerControl, "enter", "jump", "jump-loop")
+            )
+        ));
+        anim.actionSequence("long-jump-once",
+            anim.action("running-jump"),
+            Tweens.callMethod(layerControl, "enter", "jump", "jump-loop")
+        );*/
     }
     private void initInputs() {
         inputMapper.addAnalogListener(this, Functions.F_WALK, Functions.F_STRAFE, Functions.F_SHOOT);
@@ -347,6 +379,15 @@ public class GameState extends GameAppState implements
             if (control != null) return control;
         }
         return null;
+    }
+    
+    public void putGunInHand() {
+        Node hand = (Node)((Node)anim.getSpatial()).getChild("hand");
+        hand.attachChild(gun);
+    }
+    public void putGunInHolster() {
+        Node holster = (Node)((Node)anim.getSpatial()).getChild("holster");
+        holster.attachChild(gun);
     }
     
 }
