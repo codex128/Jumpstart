@@ -308,7 +308,13 @@ public class GameState extends GameAppState implements
         ((ClipAction)anim.action("aim-pistol")).setMaxTransitionWeight(1);
         anim.addAction("shoot-cycle", new BaseAction(Tweens.sequence(
             Tweens.loopDuration(.1f, anim.action("aim-pistol")),
-            anim.action("shoot-pistol")
+            Tweens.parallel(
+                anim.action("shoot-pistol"),
+                Tweens.sequence(
+                    Tweens.delay(.1f),
+                    Tweens.callMethod(this, "playGunShot")
+                )
+            )
         )));
         ((ClipAction)anim.action("draw-pistol")).setMaxTransitionWeight(.2);
         anim.addAction("draw-pistol-once", new BaseAction(Tweens.parallel(
@@ -321,6 +327,7 @@ public class GameState extends GameAppState implements
                 Tweens.callMethod(this, "putGunInHand")
             )
         )));
+        anim.action("draw-pistol-once").setSpeed(4);
         anim.addAction("holster-pistol-once", new BaseAction(Tweens.parallel(
             Tweens.sequence(
                 Tweens.invert(anim.action("draw-pistol")),
@@ -331,6 +338,7 @@ public class GameState extends GameAppState implements
                 Tweens.callMethod(this, "putGunInHolster")
             )
         )));
+        anim.action("holster-pistol-once").setSpeed(4);
         anim.action("sneaking").setSpeed(.7);
         
         // theoretical animation setup
@@ -388,6 +396,9 @@ public class GameState extends GameAppState implements
     public void putGunInHolster() {
         Node holster = (Node)((Node)anim.getSpatial()).getChild("holster");
         holster.attachChild(gun);
+    }
+    public void playGunShot() {
+        System.out.println("bang!");
     }
     
 }
