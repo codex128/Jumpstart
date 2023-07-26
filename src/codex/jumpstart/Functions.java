@@ -17,7 +17,8 @@ import com.simsilica.lemur.input.InputState;
 public class Functions {
     
     public static final String
-            MAIN_GROUP = "movement-input-group";
+            MAIN_GROUP = "main-group",
+            DEV_GROUP = "dev-group";
     
     public static final FunctionId
             F_WALK = new FunctionId(Functions.MAIN_GROUP, "walk"),
@@ -25,6 +26,8 @@ public class Functions {
             F_SPRINT = new FunctionId(Functions.MAIN_GROUP, "sprint"),
             F_JUMP = new FunctionId(Functions.MAIN_GROUP, "jump"),
             F_SHOOT = new FunctionId(Functions.MAIN_GROUP, "shoot");
+    public static final FunctionId
+            F_DIE_IMPACT = new FunctionId(Functions.DEV_GROUP, "die-impact");
     
     public static void initialize(InputMapper im) {
         im.map(F_WALK, InputState.Positive, KeyInput.KEY_W);
@@ -34,6 +37,7 @@ public class Functions {
         im.map(F_SPRINT, KeyInput.KEY_LSHIFT);
         im.map(F_JUMP, KeyInput.KEY_SPACE);
         im.map(F_SHOOT, Button.MOUSE_BUTTON1);
+        im.map(F_DIE_IMPACT, KeyInput.KEY_X);
     }
     
 }

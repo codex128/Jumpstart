@@ -11,6 +11,7 @@ import codex.boost.camera.OrbitalCamera;
 import codex.boost.scene.SceneGraphIterator;
 import codex.j3map.J3map;
 import com.jme3.anim.AnimComposer;
+import com.jme3.anim.Joint;
 import com.jme3.anim.SkinningControl;
 import com.jme3.anim.tween.Tweens;
 import com.jme3.anim.tween.action.BaseAction;
@@ -20,6 +21,10 @@ import com.jme3.anim.tween.action.LinearBlendSpace;
 import com.jme3.app.Application;
 import com.jme3.bullet.BulletAppState;
 import com.jme3.bullet.PhysicsSpace;
+import com.jme3.bullet.PhysicsTickListener;
+import com.jme3.bullet.animation.DacConfiguration;
+import com.jme3.bullet.animation.DynamicAnimControl;
+import com.jme3.bullet.animation.RangeOfMotion;
 import com.jme3.bullet.control.BetterCharacterControl;
 import com.jme3.bullet.control.RigidBodyControl;
 import com.jme3.environment.EnvironmentCamera;
@@ -72,6 +77,8 @@ public class GameState extends GameAppState implements
     private boolean sneaking = false;
     private Spatial gun;
     private SFXSpeaker gunShotSound;
+    private boolean alive = true;
+    private DynamicAnimControl dac;
     
     @Override
     protected void init(Application app) {
@@ -81,8 +88,11 @@ public class GameState extends GameAppState implements
         initIllumination();
         initCamera(ybot);
         initAnimations();
+        initRagdoll();
         initAudio();
         initInputs();
+        
+        //kill();
         
         gun = assetManager.loadModel("Models/weapons/M9Pistol.j3o");
         gun.setLocalScale(50f);
@@ -178,6 +188,11 @@ public class GameState extends GameAppState implements
         }
         else if (func == Functions.F_JUMP && value == InputState.Positive && control.isOnGround()) {
             control.jump();
+        }
+        else if (func == Functions.F_DIE_IMPACT && alive && value != InputState.Off) {
+            //layerControl.enter("death", "die-impact");
+            kill();
+            alive = false;
         }
     }
     @Override
@@ -292,7 +307,8 @@ public class GameState extends GameAppState implements
         layerControl = new AnimLayerControl(AnimComposer.class);
         anim.getSpatial().addControl(layerControl);
         AlertArmatureMask allJoints = AlertArmatureMask.all("idle", anim, skin);
-        layerControl.createSet(anim, skin, mask -> mask.addAll(), "idle", "move", "gun", "jump");
+        layerControl.createSet(anim, skin, mask -> mask.addAll(),
+                "idle", "move", "gun", "jump", "death");
         layerControl.create("idle", allJoints);
         var idle = (ClipAction)anim.action("idle");
         idle.setMaxTransitionWeight(.5f);
@@ -339,6 +355,14 @@ public class GameState extends GameAppState implements
         )));
         anim.action("holster-pistol-once").setSpeed(4);
         anim.action("sneaking").setSpeed(.7);
+        anim.addAction("die-impact", new BaseAction(Tweens.parallel(
+            anim.action("killed"),
+            Tweens.sequence(
+                Tweens.delay(1f),
+                Tweens.callMethod(this, "kill"),
+                Tweens.callMethod(layerControl, "exit", "death")
+            )
+        )));
         
         // theoretical animation setup
         /*anim.addAction("hi-jump-once", new BaseAction(
@@ -364,9 +388,26 @@ public class GameState extends GameAppState implements
         playGunShot();
     }
     private void initInputs() {
-        inputMapper.addAnalogListener(this, Functions.F_WALK, Functions.F_STRAFE, Functions.F_SHOOT);
-        inputMapper.addStateListener(this, Functions.F_JUMP, Functions.F_SPRINT, Functions.F_SHOOT);
+        inputMapper.addAnalogListener(this,
+                Functions.F_WALK,
+                Functions.F_STRAFE);
+        inputMapper.addStateListener(this,
+                Functions.F_JUMP,
+                Functions.F_SPRINT,
+                Functions.F_SHOOT,
+                Functions.F_DIE_IMPACT);
         inputMapper.activateGroup(Functions.MAIN_GROUP);
+        inputMapper.activateGroup(Functions.DEV_GROUP);
+    }
+    
+    private void link(DynamicAnimControl dac, String joint, float mass, RangeOfMotion motion) {
+        dac.link("mixamorig:"+joint, mass, motion);
+    }
+    private RangeOfMotion copyMotion(RangeOfMotion motion) {
+        return new RangeOfMotion(
+                motion.getMaxRotation(0), motion.getMinRotation(0),
+                motion.getMaxRotation(1), motion.getMinRotation(1),
+                motion.getMaxRotation(2), motion.getMinRotation(2));
     }
     
     private float getMoveSpeed() {
@@ -403,6 +444,51 @@ public class GameState extends GameAppState implements
     }
     public void playGunShot() {
         gunShotSound.playInstance();
+    }
+    public void kill() {
+        getPhysicsSpace().remove(control);
+        getPhysicsSpace().add(dac);
+        //initRagdoll();
+        getPhysicsSpace().addTickListener(new PhysicsTickListener() {
+            @Override
+            public void prePhysicsTick(PhysicsSpace space, float tpf) {}
+            @Override
+            public void physicsTick(PhysicsSpace space, float tpf) {
+                dac.setRagdollMode();
+                getPhysicsSpace().removeTickListener(this);
+            }
+        });
+        alive = false;
+    }
+    private void initRagdoll() {
+        dac = new DynamicAnimControl();
+        dac.setMass(DacConfiguration.torsoName, 1f);
+        var motion = new RangeOfMotion(.5f, -.5f, .5f, -.5f, .5f, -.5f);
+        //link(dac, "Hips", 1f, motion);
+        link(dac, "Spine", 1f, copyMotion(motion));
+        link(dac, "Spine1", 1f, copyMotion(motion));
+        link(dac, "Spine2", 1f, copyMotion(motion));
+        link(dac, "Neck", 1f, copyMotion(motion));
+        //link(dac, "Head", 1f, copyMotion(motion));
+        //link(dac, "LeftShoulder", 1f, copyMotion(motion));
+        link(dac, "LeftArm", 1f, copyMotion(motion));
+        link(dac, "LeftForeArm", 1f, copyMotion(motion));
+        //link(dac, "LeftHand", 1f, copyMotion(motion));
+        //link(dac, "RightShoulder", 1f, copyMotion(motion));
+        link(dac, "RightArm", 1f, copyMotion(motion));
+        link(dac, "RightForeArm", 1f, copyMotion(motion));
+        //link(dac, "RightHand", 1f, copyMotion(motion));
+        link(dac, "LeftUpLeg", 1f, copyMotion(motion));
+        link(dac, "LeftLeg", 1f, copyMotion(motion));
+        //link(dac, "LeftFoot", 1f, copyMotion(motion));
+        link(dac, "RightUpLeg", 1f, copyMotion(motion));
+        link(dac, "RightLeg", 1f, copyMotion(motion));
+        //link(dac, "RightFoot", 1f, copyMotion(motion));
+        skin.getSpatial().addControl(dac);
+        //getPhysicsSpace().add(dac);
+        for (var body : dac.listRigidBodies()) {
+            
+        }
     }
     
 }

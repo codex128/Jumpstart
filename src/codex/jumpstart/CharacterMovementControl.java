@@ -26,7 +26,7 @@ public class CharacterMovementControl extends SubControl<BetterCharacterControl>
     private final Vector3f view = new Vector3f(0f, 0f, 1f);
     private final Vector3f velocity = new Vector3f();
     private float speed = 0f;
-    private Vector2f friction = new Vector2f(-1, 0);
+    private Vector2f friction = new Vector2f(1, 0);
     private boolean faceWalkDir = false;
     private boolean autoFriction = true;
     private final LinkedList<CharacterMovementListener> listeners = new LinkedList<>();
