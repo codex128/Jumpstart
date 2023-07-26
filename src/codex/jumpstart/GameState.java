@@ -5,6 +5,8 @@
 package codex.jumpstart;
 
 import codex.boost.GameAppState;
+import codex.boost.audio.AudioModel;
+import codex.boost.audio.SFXSpeaker;
 import codex.boost.camera.OrbitalCamera;
 import codex.boost.scene.SceneGraphIterator;
 import codex.j3map.J3map;
@@ -26,20 +28,15 @@ import com.jme3.environment.generation.JobProgressAdapter;
 import com.jme3.light.AmbientLight;
 import com.jme3.light.DirectionalLight;
 import com.jme3.light.LightProbe;
-import com.jme3.material.Material;
 import com.jme3.math.ColorRGBA;
 import com.jme3.math.FastMath;
 import com.jme3.math.Quaternion;
 import com.jme3.math.Vector3f;
-import com.jme3.renderer.RenderManager;
-import com.jme3.renderer.ViewPort;
 import com.jme3.renderer.queue.RenderQueue;
 import com.jme3.scene.Geometry;
 import com.jme3.scene.Node;
 import com.jme3.scene.Spatial;
-import com.jme3.scene.control.AbstractControl;
 import com.jme3.scene.control.Control;
-import com.jme3.scene.shape.Box;
 import com.jme3.shadow.DirectionalLightShadowRenderer;
 import com.jme3.util.SkyFactory;
 import com.simsilica.lemur.GuiGlobals;
@@ -74,6 +71,7 @@ public class GameState extends GameAppState implements
     private boolean sprinting = !false;
     private boolean sneaking = false;
     private Spatial gun;
+    private SFXSpeaker gunShotSound;
     
     @Override
     protected void init(Application app) {
@@ -83,6 +81,7 @@ public class GameState extends GameAppState implements
         initIllumination();
         initCamera(ybot);
         initAnimations();
+        initAudio();
         initInputs();
         
         gun = assetManager.loadModel("Models/weapons/M9Pistol.j3o");
@@ -359,6 +358,11 @@ public class GameState extends GameAppState implements
             Tweens.callMethod(layerControl, "enter", "jump", "jump-loop")
         );*/
     }
+    private void initAudio() {
+        var model = new AudioModel((J3map)assetManager.loadAsset("Properties/gunShot.j3map"));
+        gunShotSound = new SFXSpeaker(assetManager, model);
+        playGunShot();
+    }
     private void initInputs() {
         inputMapper.addAnalogListener(this, Functions.F_WALK, Functions.F_STRAFE, Functions.F_SHOOT);
         inputMapper.addStateListener(this, Functions.F_JUMP, Functions.F_SPRINT, Functions.F_SHOOT);
@@ -398,7 +402,7 @@ public class GameState extends GameAppState implements
         holster.attachChild(gun);
     }
     public void playGunShot() {
-        System.out.println("bang!");
+        gunShotSound.playInstance();
     }
     
 }

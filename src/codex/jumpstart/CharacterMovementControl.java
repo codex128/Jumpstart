@@ -8,6 +8,7 @@ import codex.boost.Listenable;
 import codex.boost.control.SubControl;
 import com.jme3.bullet.control.BetterCharacterControl;
 import com.jme3.math.FastMath;
+import com.jme3.math.Vector2f;
 import com.jme3.math.Vector3f;
 import com.jme3.renderer.RenderManager;
 import com.jme3.renderer.ViewPort;
@@ -25,7 +26,9 @@ public class CharacterMovementControl extends SubControl<BetterCharacterControl>
     private final Vector3f view = new Vector3f(0f, 0f, 1f);
     private final Vector3f velocity = new Vector3f();
     private float speed = 0f;
+    private Vector2f friction = new Vector2f(-1, 0);
     private boolean faceWalkDir = false;
+    private boolean autoFriction = true;
     private final LinkedList<CharacterMovementListener> listeners = new LinkedList<>();
     
     public CharacterMovementControl(Class<BetterCharacterControl> type) {
@@ -37,6 +40,14 @@ public class CharacterMovementControl extends SubControl<BetterCharacterControl>
 
     @Override
     protected void subControlUpdate(float tpf) {
+        if (autoFriction) {
+            if (dependency.isOnGround()) {
+                dependency.getRigidBody().setFriction(friction.x);
+            }
+            else {
+                dependency.getRigidBody().setFriction(friction.y);
+            }
+        }
         var vel = dependency.getRigidBody().getLinearVelocity();
         if (!velocity.equals(vel)) {
             notifyListeners(l -> l.velocityChanged(velocity, vel));
@@ -50,6 +61,9 @@ public class CharacterMovementControl extends SubControl<BetterCharacterControl>
         updateWalkDirection();
         updateViewDirection();
         dependency.getRigidBody().getLinearVelocity(velocity);
+        if (friction.x < 0) {
+            friction.x = dependency.getRigidBody().getFriction();
+        }
     }
     @Override
     protected void onDependencyReleased() {}
@@ -87,6 +101,15 @@ public class CharacterMovementControl extends SubControl<BetterCharacterControl>
     }
     public void setFaceWalkDirection(boolean faceWalkDir) {
         this.faceWalkDir = faceWalkDir;
+    }
+    public void setAutoFrictionEnabled(boolean enable) {
+        autoFriction = enable;
+    }
+    public void setNormalFriction(float friction) {
+        this.friction.x = friction;
+    }
+    public void setInAirFriction(float friction) {
+        this.friction.y = friction;
     }
     
     public Vector3f getWalkDirection(Vector3f store) {

@@ -1,0 +1,5 @@
+source: "Sounds/Bang.wav";
+volume: 1f;
+pitch: 1f;
+positional: false;
+data_type: "buffer";
