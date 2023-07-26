@@ -447,17 +447,18 @@ public class GameState extends GameAppState implements
     }
     public void kill() {
         getPhysicsSpace().remove(control);
-        getPhysicsSpace().add(dac);
+//        getPhysicsSpace().add(dac);
+        dac.setRagdollMode();
         //initRagdoll();
-        getPhysicsSpace().addTickListener(new PhysicsTickListener() {
-            @Override
-            public void prePhysicsTick(PhysicsSpace space, float tpf) {}
-            @Override
-            public void physicsTick(PhysicsSpace space, float tpf) {
-                dac.setRagdollMode();
-                getPhysicsSpace().removeTickListener(this);
-            }
-        });
+//        getPhysicsSpace().addTickListener(new PhysicsTickListener() {
+//            @Override
+//            public void prePhysicsTick(PhysicsSpace space, float tpf) {}
+//            @Override
+//            public void physicsTick(PhysicsSpace space, float tpf) {
+//                dac.setRagdollMode();
+//                getPhysicsSpace().removeTickListener(this);
+//            }
+//        });
         alive = false;
     }
     private void initRagdoll() {
@@ -485,10 +486,7 @@ public class GameState extends GameAppState implements
         link(dac, "RightLeg", 1f, copyMotion(motion));
         //link(dac, "RightFoot", 1f, copyMotion(motion));
         skin.getSpatial().addControl(dac);
-        //getPhysicsSpace().add(dac);
-        for (var body : dac.listRigidBodies()) {
-            
-        }
+        getPhysicsSpace().add(dac);
     }
     
 }
