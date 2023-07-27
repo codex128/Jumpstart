@@ -197,7 +197,7 @@ public class GameState extends GameAppState implements
             control.jump();
         }
         else if (func == Functions.F_DIE_IMPACT && value != InputState.Off) {
-            kill();
+            startRagdollPhysics();
 //            if (!layerControl.isActive("death")) {
 //                layerControl.enter("death", "die-impact");
 //                if (layerControl.isActive("gun")) {
@@ -425,16 +425,6 @@ public class GameState extends GameAppState implements
         inputMapper.activateGroup(Functions.DEV_GROUP);
     }
     
-    private void link(DynamicAnimControl dac, String joint, float mass, RangeOfMotion motion) {
-        dac.link("mixamorig:"+joint, mass, motion);
-    }
-    private RangeOfMotion copyMotion(RangeOfMotion motion) {
-        return new RangeOfMotion(
-                motion.getMaxRotation(0), motion.getMinRotation(0),
-                motion.getMaxRotation(1), motion.getMinRotation(1),
-                motion.getMaxRotation(2), motion.getMinRotation(2));
-    }
-    
     private boolean isAlive() {
         return !layerControl.isActive("death");
     }
@@ -477,11 +467,15 @@ public class GameState extends GameAppState implements
     public void playGunShot() {
         gunShotSound.playInstance();
     }
-    public void kill() {
+    
+    /**
+     * Starts the ragdoll physics on the next physics tick.
+     * Disables character control physics.
+     */
+    public void startRagdollPhysics() {
         getPhysicsSpace().remove(control);
+        // add the DAC now, which saves (in theory) having to calculate DAC rigid bodies when they aren't necessary
         getPhysicsSpace().add(dac);
-        //dac.setRagdollMode();
-        //initRagdoll();
         getPhysicsSpace().addTickListener(new PhysicsTickListener() {
             @Override
             public void prePhysicsTick(PhysicsSpace space, float tpf) {}
@@ -492,36 +486,54 @@ public class GameState extends GameAppState implements
             }
         });
     }
+    /**
+     * Initializes (but does not start) the ragdoll physics.
+     */
     private void initRagdoll() {
         dac = new DynamicAnimControl();
         dac.setMass(DacConfiguration.torsoName, 1f);
+        // default range of motion used for testing
         var motion = new RangeOfMotion(0f, 0f, 0f, 0f, 0f, 0f);
         //link(dac, "Hips", 1f, motion);
-        link(dac, "Spine", 1f, copyMotion(motion));
-        //link(dac, "Spine1", 1f, copyMotion(motion));
-        //link(dac, "Spine2", 1f, copyMotion(motion));
-        //link(dac, "Neck", 1f, copyMotion(motion));
-        //link(dac, "Head", 1f, copyMotion(motion));
-        //link(dac, "LeftShoulder", 1f, copyMotion(motion));
-        link(dac, "LeftArm", 1f, copyMotion(motion));
-        //link(dac, "LeftForeArm", 1f, copyMotion(motion));
-        //link(dac, "LeftHand", 1f, copyMotion(motion));
-        //link(dac, "RightShoulder", 1f, copyMotion(motion));
-        link(dac, "RightArm", 1f, copyMotion(motion));
-        //link(dac, "RightForeArm", 1f, copyMotion(motion));
-        //link(dac, "RightHand", 1f, copyMotion(motion));
-        link(dac, "LeftUpLeg", 1f, copyMotion(motion));
-        //link(dac, "LeftLeg", 1f, copyMotion(motion));
-        //link(dac, "LeftFoot", 1f, copyMotion(motion));
-        link(dac, "RightUpLeg", 1f, copyMotion(motion));
-        //link(dac, "RightLeg", 1f, copyMotion(motion));
-        //link(dac, "RightFoot", 1f, copyMotion(motion));
+        link(dac, "Spine", 1f, motion);
+        //link(dac, "Spine1", 1f, motion);
+        //link(dac, "Spine2", 1f, motion);
+        //link(dac, "Neck", 1f, motion);
+        //link(dac, "Head", 1f, motion);
+        //link(dac, "LeftShoulder", 1f, motion);
+        link(dac, "LeftArm", 1f, motion);
+        //link(dac, "LeftForeArm", 1f, motion);
+        //link(dac, "LeftHand", 1f, motion);
+        //link(dac, "RightShoulder", 1f, motion);
+        link(dac, "RightArm", 1f, motion);
+        //link(dac, "RightForeArm", 1f, motion);
+        //link(dac, "RightHand", 1f, motion);
+        link(dac, "LeftUpLeg", 1f, motion);
+        //link(dac, "LeftLeg", 1f, motion);
+        //link(dac, "LeftFoot", 1f, motion);
+        link(dac, "RightUpLeg", 1f, motion);
+        //link(dac, "RightLeg", 1f, motion);
+        //link(dac, "RightFoot", 1f, motion);
         dac.setIgnoredHops(20);
+        // add the DAC to the same spatial as the SkinningControl
         skin.getSpatial().addControl(dac);
+        // set the margin on all collision bodies
         for (var body : dac.listRigidBodies()) {
             body.getCollisionShape().setMargin(.0001f);
         }
+        // don't add the DAC yet, because we don't really need it yet
         //getPhysicsSpace().add(dac);
+    }
+    /**
+     * Link the given joint to the DynamicAnimControl.
+     * This is for Mixamo rigs only!
+     * @param dac
+     * @param joint
+     * @param mass
+     * @param motion 
+     */
+    private void link(DynamicAnimControl dac, String joint, float mass, RangeOfMotion motion) {
+        dac.link("mixamorig:"+joint, mass, motion);
     }
     
 }
