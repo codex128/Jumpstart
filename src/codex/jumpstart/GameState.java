@@ -91,7 +91,7 @@ public class GameState extends GameAppState implements
         initAudio();
         initInputs();
         
-        //kill();
+        //startRagdollPhysics();
         
         gun = assetManager.loadModel("Models/weapons/M9Pistol.j3o");
         gun.setLocalScale(50f);
@@ -474,8 +474,9 @@ public class GameState extends GameAppState implements
      */
     public void startRagdollPhysics() {
         getPhysicsSpace().remove(control);
-        // add the DAC now, which saves (in theory) having to calculate DAC rigid bodies when they aren't necessary
+        // add the DAC to the physics space now when we actually need it
         getPhysicsSpace().add(dac);
+        // enable ragdoll mode on the next physics tick
         getPhysicsSpace().addTickListener(new PhysicsTickListener() {
             @Override
             public void prePhysicsTick(PhysicsSpace space, float tpf) {}
@@ -521,7 +522,7 @@ public class GameState extends GameAppState implements
         for (var body : dac.listRigidBodies()) {
             body.getCollisionShape().setMargin(.0001f);
         }
-        // don't add the DAC yet, because we don't really need it yet
+        // don't add the DAC to the physics space yet, because we don't really need it yet
         //getPhysicsSpace().add(dac);
     }
     /**
