@@ -40,7 +40,6 @@ public class Main extends SimpleApplication {
         GuiGlobals.initialize(this);
         Functions.initialize(GuiGlobals.getInstance().getInputMapper());
         
-        assetManager.registerLocator("/home/codex/java/AssetKits/JumpstartKit/assets", FileLocator.class);
         assetManager.registerLoader(J3mapFactory.class, "j3map");
         J3mapFactory.registerAllProcessors(
                 BooleanProcessor.class,

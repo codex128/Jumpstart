@@ -237,7 +237,7 @@ public class GameState extends GameAppState implements
     }
     
     private Vector3f initScene() {
-        scene = (Node)assetManager.loadModel("Models/maps/playground.gltf");
+        scene = (Node)assetManager.loadModel("Models/maps/playground.j3o");
         rootNode.attachChild(scene);
         var it = new SceneGraphIterator(scene);
         Vector3f startLocation = new Vector3f();
