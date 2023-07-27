@@ -20,6 +20,7 @@ import com.jme3.anim.tween.action.LinearBlendSpace;
 import com.jme3.app.Application;
 import com.jme3.bullet.BulletAppState;
 import com.jme3.bullet.PhysicsSpace;
+import com.jme3.bullet.PhysicsTickListener;
 import com.jme3.bullet.animation.DacConfiguration;
 import com.jme3.bullet.animation.DynamicAnimControl;
 import com.jme3.bullet.animation.RangeOfMotion;
@@ -86,7 +87,7 @@ public class GameState extends GameAppState implements
         initIllumination();
         initCamera(ybot);
         initAnimations();
-        //initRagdoll();
+        initRagdoll();
         initAudio();
         initInputs();
         
@@ -196,17 +197,18 @@ public class GameState extends GameAppState implements
             control.jump();
         }
         else if (func == Functions.F_DIE_IMPACT && value != InputState.Off) {
-            if (!layerControl.isActive("death")) {
-                layerControl.enter("death", "die-impact");
-                if (layerControl.isActive("gun")) {
-                    layerControl.exit("gun");
-                    switchCameraModes();
-                    speedfactor = 0f;
-                }
-            }
-            else {
-                layerControl.exit("death");
-            }
+            kill();
+//            if (!layerControl.isActive("death")) {
+//                layerControl.enter("death", "die-impact");
+//                if (layerControl.isActive("gun")) {
+//                    layerControl.exit("gun");
+//                    switchCameraModes();
+//                    speedfactor = 0f;
+//                }
+//            }
+//            else {
+//                layerControl.exit("death");
+//            }
         }
     }
     @Override
@@ -378,9 +380,13 @@ public class GameState extends GameAppState implements
         )));
         anim.action("holster-pistol-once").setSpeed(4);
         anim.action("sneaking").setSpeed(.7);
-        anim.addAction("die-impact", new BaseAction(Tweens.sequence(
+        anim.addAction("die-impact", new BaseAction(Tweens.parallel(
             anim.action("killed"),
-            Tweens.callMethod(layerControl, "enter", "death", "freeze")
+            //Tweens.callMethod(layerControl, "enter", "death", "freeze")
+            Tweens.sequence(
+                Tweens.delay(.5f),
+                Tweens.callMethod(this, "kill")
+            )
         )));
         
         // theoretical animation setup
@@ -473,18 +479,18 @@ public class GameState extends GameAppState implements
     }
     public void kill() {
         getPhysicsSpace().remove(control);
-//        getPhysicsSpace().add(dac);
-        dac.setRagdollMode();
+        getPhysicsSpace().add(dac);
+        //dac.setRagdollMode();
         //initRagdoll();
-//        getPhysicsSpace().addTickListener(new PhysicsTickListener() {
-//            @Override
-//            public void prePhysicsTick(PhysicsSpace space, float tpf) {}
-//            @Override
-//            public void physicsTick(PhysicsSpace space, float tpf) {
-//                dac.setRagdollMode();
-//                getPhysicsSpace().removeTickListener(this);
-//            }
-//        });
+        getPhysicsSpace().addTickListener(new PhysicsTickListener() {
+            @Override
+            public void prePhysicsTick(PhysicsSpace space, float tpf) {}
+            @Override
+            public void physicsTick(PhysicsSpace space, float tpf) {
+                dac.setRagdollMode();
+                getPhysicsSpace().removeTickListener(this);
+            }
+        });
     }
     private void initRagdoll() {
         dac = new DynamicAnimControl();
@@ -510,11 +516,12 @@ public class GameState extends GameAppState implements
         link(dac, "RightUpLeg", 1f, copyMotion(motion));
         //link(dac, "RightLeg", 1f, copyMotion(motion));
         //link(dac, "RightFoot", 1f, copyMotion(motion));
+        dac.setIgnoredHops(20);
         skin.getSpatial().addControl(dac);
         for (var body : dac.listRigidBodies()) {
             body.getCollisionShape().setMargin(.0001f);
         }
-        getPhysicsSpace().add(dac);
+        //getPhysicsSpace().add(dac);
     }
     
 }
