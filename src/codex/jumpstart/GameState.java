@@ -11,7 +11,6 @@ import codex.boost.camera.OrbitalCamera;
 import codex.boost.scene.SceneGraphIterator;
 import codex.j3map.J3map;
 import com.jme3.anim.AnimComposer;
-import com.jme3.anim.Joint;
 import com.jme3.anim.SkinningControl;
 import com.jme3.anim.tween.Tweens;
 import com.jme3.anim.tween.action.BaseAction;
@@ -21,7 +20,6 @@ import com.jme3.anim.tween.action.LinearBlendSpace;
 import com.jme3.app.Application;
 import com.jme3.bullet.BulletAppState;
 import com.jme3.bullet.PhysicsSpace;
-import com.jme3.bullet.PhysicsTickListener;
 import com.jme3.bullet.animation.DacConfiguration;
 import com.jme3.bullet.animation.DynamicAnimControl;
 import com.jme3.bullet.animation.RangeOfMotion;
@@ -67,7 +65,8 @@ public class GameState extends GameAppState implements
     private CharacterMovementControl movement;
     private MyCharacterControl control;
     private OrbitalCamera orbital;
-    private Vector3f inputdirection = new Vector3f();
+    private ShoulderCamera shoulder;
+    private final Vector3f inputdirection = new Vector3f();
     private final float walkspeed = 2f;
     private final float runspeed = 10f;
     private final float sneakspeed = 1.6f;
@@ -77,7 +76,6 @@ public class GameState extends GameAppState implements
     private boolean sneaking = false;
     private Spatial gun;
     private SFXSpeaker gunShotSound;
-    private boolean alive = true;
     private DynamicAnimControl dac;
     
     @Override
@@ -88,7 +86,7 @@ public class GameState extends GameAppState implements
         initIllumination();
         initCamera(ybot);
         initAnimations();
-        initRagdoll();
+        //initRagdoll();
         initAudio();
         initInputs();
         
@@ -120,16 +118,25 @@ public class GameState extends GameAppState implements
     public void update(float tpf) {
         Vector3f walkDir = new Vector3f();
         if (inputdirection.z != 0 || inputdirection.x != 0) {
-            Quaternion rotation = new Quaternion().lookAt(orbital.getPlanarCameraDirection(), Vector3f.UNIT_Y);
-            walkDir.set(rotation.getRotationColumn(2));
-            walkDir.multLocal(inputdirection.z);
-            walkDir.addLocal(rotation.getRotationColumn(0).multLocal(-inputdirection.x));
-            Quaternion currentDir = new Quaternion().lookAt(movement.getWalkDirection(new Vector3f()), Vector3f.UNIT_Y);
-            Quaternion desiredDir = new Quaternion().lookAt(walkDir.normalizeLocal(), Vector3f.UNIT_Y);
-            currentDir.nlerp(desiredDir, .1f);
-            movement.setWalkDirection(currentDir.mult(Vector3f.UNIT_Z));
+            if (orbital.isEnabled()) {
+                Quaternion rotation = new Quaternion().lookAt(orbital.getPlanarCameraDirection(), Vector3f.UNIT_Y);
+                walkDir.set(rotation.getRotationColumn(2));
+                walkDir.multLocal(inputdirection.z);
+                walkDir.addLocal(rotation.getRotationColumn(0).multLocal(-inputdirection.x));
+                Quaternion currentDir = new Quaternion().lookAt(movement.getWalkDirection(new Vector3f()), Vector3f.UNIT_Y);
+                Quaternion desiredDir = new Quaternion().lookAt(walkDir.normalizeLocal(), Vector3f.UNIT_Y);
+                currentDir.nlerp(desiredDir, .1f);
+                movement.setWalkDirection(currentDir.mult(Vector3f.UNIT_Z));
+            }
+            else {
+                
+            }
         }
         movement.setWalkSpeed(Math.max(FastMath.abs(inputdirection.z), FastMath.abs(inputdirection.x))*getMoveSpeed());
+        if (shoulder.isEnabled()) {
+            shoulder.setSubjectTranslation(control.getRigidBody().getPhysicsLocation());
+            //shoulder.setSubjectRotation(control.getRigidBody().getPhysicsRotation());
+        }
         if (!control.isOnGround() && !layerControl.isActive("jump")) {
             // trigger the falling loop if the jump layer is not active
             // this makes "falling" a default when not on the ground
@@ -139,7 +146,7 @@ public class GameState extends GameAppState implements
     }
     @Override
     public void valueActive(FunctionId func, double value, double tpf) {
-        if (!layerControl.isActive("jump") && !layerControl.isActive("gun")) {
+        if (!layerControl.isActive("jump") && isAlive()) {
             if (func == Functions.F_WALK) {
                 inputdirection.z = FastMath.sign((float)value);
             }
@@ -156,7 +163,7 @@ public class GameState extends GameAppState implements
     }    
     @Override
     public void valueChanged(FunctionId func, InputState value, double tpf) {
-        if (func == Functions.F_SPRINT && value == InputState.Positive) {
+        if (func == Functions.F_SPRINT && isAlive() && value == InputState.Positive) {
             //sprinting = value == InputState.Positive;
             // repurposing sprint function for sneaking temporarily
             sneaking = !sneaking;
@@ -176,23 +183,30 @@ public class GameState extends GameAppState implements
                 }
             }
         }
-        else if (func == Functions.F_SHOOT) {
+        else if (func == Functions.F_SHOOT && isAlive()) {
             if (!layerControl.get("gun").isActive() && value == InputState.Positive) {
                 layerControl.get("gun").enter("draw-pistol-once");
-                //orbital.setEnabled(false);
             }
             else if (layerControl.get("gun").isActive() && value == InputState.Off) {
                 layerControl.get("gun").enter("holster-pistol-once");
-                //orbital.setEnabled(true);
+                switchCameraModes();
             }
         }
-        else if (func == Functions.F_JUMP && value == InputState.Positive && control.isOnGround()) {
+        else if (func == Functions.F_JUMP && isAlive() && value == InputState.Positive && control.isOnGround()) {
             control.jump();
         }
-        else if (func == Functions.F_DIE_IMPACT && alive && value != InputState.Off) {
-            //layerControl.enter("death", "die-impact");
-            kill();
-            alive = false;
+        else if (func == Functions.F_DIE_IMPACT && value != InputState.Off) {
+            if (!layerControl.isActive("death")) {
+                layerControl.enter("death", "die-impact");
+                if (layerControl.isActive("gun")) {
+                    layerControl.exit("gun");
+                    switchCameraModes();
+                    speedfactor = 0f;
+                }
+            }
+            else {
+                layerControl.exit("death");
+            }
         }
     }
     @Override
@@ -249,7 +263,7 @@ public class GameState extends GameAppState implements
         control = createCharacter(character);
         ybot.addControl(control);
         getPhysicsSpace().add(control);
-        control.getRigidBody().setCcdMotionThreshold(.1f);
+        control.getRigidBody().setCcdMotionThreshold(0f);
         movement = new CharacterMovementControl(BetterCharacterControl.class);
         movement.setFaceWalkDirection(true);
         movement.addListener(this);
@@ -300,6 +314,11 @@ public class GameState extends GameAppState implements
         orbital.setOffsets(new Vector3f(0f, 1.5f, 0f));
         ybot.addControl(orbital);
         inputMapper.activateGroup(OrbitalCamera.INPUT_GROUP);
+        shoulder = new ShoulderCamera(cam);
+        shoulder.setEnabled(false);
+        shoulder.setOffset(new Vector3f(-.2f, 1.7f, -1.8f));
+        shoulder.setTarget(new Vector3f(-.2f, 1.7f, 1f));
+        ybot.addControl(shoulder);
         GuiGlobals.getInstance().setCursorEventsEnabled(false);
     }
     private void initAnimations() {
@@ -310,11 +329,13 @@ public class GameState extends GameAppState implements
         layerControl.createSet(anim, skin, mask -> mask.addAll(),
                 "idle", "move", "gun", "jump", "death");
         layerControl.create("idle", allJoints);
+        anim.addAction("freeze", new BaseAction(anim.action("idle")));
+        anim.action("freeze").setSpeed(0);
         var idle = (ClipAction)anim.action("idle");
         idle.setMaxTransitionWeight(.5f);
         layerControl.enter("idle", "idle");
-        ((ClipAction)anim.action("walk")).setMaxTransitionWeight(.6);
-        ((ClipAction)anim.action("sprint")).setMaxTransitionWeight(.6);
+        ((ClipAction)anim.action("walk")).setMaxTransitionWeight(.5);
+        ((ClipAction)anim.action("sprint")).setMaxTransitionWeight(.5);
         anim.actionBlended("walk->run", new LinearBlendSpace(0f, 1f), "walk", "sprint");
         anim.actionSequence("land-once",
             anim.action("landing"),
@@ -322,7 +343,7 @@ public class GameState extends GameAppState implements
         );
         ((ClipAction)anim.action("aim-pistol")).setMaxTransitionWeight(1);
         anim.addAction("shoot-cycle", new BaseAction(Tweens.sequence(
-            Tweens.loopDuration(.1f, anim.action("aim-pistol")),
+            Tweens.loopDuration(.2f, anim.action("aim-pistol")),
             Tweens.parallel(
                 anim.action("shoot-pistol"),
                 Tweens.sequence(
@@ -331,10 +352,12 @@ public class GameState extends GameAppState implements
                 )
             )
         )));
-        ((ClipAction)anim.action("draw-pistol")).setMaxTransitionWeight(.2);
+        anim.action("shoot-cycle").setSpeed(2);
+        ((ClipAction)anim.action("draw-pistol")).setMaxTransitionWeight(.7);
         anim.addAction("draw-pistol-once", new BaseAction(Tweens.parallel(
             Tweens.sequence(
                 anim.action("draw-pistol"),
+                Tweens.callMethod(this, "switchCameraModes"),
                 Tweens.callMethod(layerControl, "enter", "gun", "shoot-cycle")
             ),
             Tweens.sequence(
@@ -355,13 +378,9 @@ public class GameState extends GameAppState implements
         )));
         anim.action("holster-pistol-once").setSpeed(4);
         anim.action("sneaking").setSpeed(.7);
-        anim.addAction("die-impact", new BaseAction(Tweens.parallel(
+        anim.addAction("die-impact", new BaseAction(Tweens.sequence(
             anim.action("killed"),
-            Tweens.sequence(
-                Tweens.delay(1f),
-                Tweens.callMethod(this, "kill"),
-                Tweens.callMethod(layerControl, "exit", "death")
-            )
+            Tweens.callMethod(layerControl, "enter", "death", "freeze")
         )));
         
         // theoretical animation setup
@@ -385,7 +404,7 @@ public class GameState extends GameAppState implements
     private void initAudio() {
         var model = new AudioModel((J3map)assetManager.loadAsset("Properties/gunShot.j3map"));
         gunShotSound = new SFXSpeaker(assetManager, model);
-        playGunShot();
+        //playGunShot();
     }
     private void initInputs() {
         inputMapper.addAnalogListener(this,
@@ -410,6 +429,9 @@ public class GameState extends GameAppState implements
                 motion.getMaxRotation(2), motion.getMinRotation(2));
     }
     
+    private boolean isAlive() {
+        return !layerControl.isActive("death");
+    }
     private float getMoveSpeed() {
         if (!sneaking) return FastMath.interpolateLinear(speedfactor, walkspeed, runspeed);
         return sneakspeed;
@@ -434,6 +456,10 @@ public class GameState extends GameAppState implements
         return null;
     }
     
+    public void switchCameraModes() {
+        orbital.setEnabled(shoulder.isEnabled());
+        shoulder.setEnabled(!orbital.isEnabled());
+    }
     public void putGunInHand() {
         Node hand = (Node)((Node)anim.getSpatial()).getChild("hand");
         hand.attachChild(gun);
@@ -459,33 +485,35 @@ public class GameState extends GameAppState implements
 //                getPhysicsSpace().removeTickListener(this);
 //            }
 //        });
-        alive = false;
     }
     private void initRagdoll() {
         dac = new DynamicAnimControl();
         dac.setMass(DacConfiguration.torsoName, 1f);
-        var motion = new RangeOfMotion(.5f, -.5f, .5f, -.5f, .5f, -.5f);
+        var motion = new RangeOfMotion(0f, 0f, 0f, 0f, 0f, 0f);
         //link(dac, "Hips", 1f, motion);
         link(dac, "Spine", 1f, copyMotion(motion));
-        link(dac, "Spine1", 1f, copyMotion(motion));
-        link(dac, "Spine2", 1f, copyMotion(motion));
-        link(dac, "Neck", 1f, copyMotion(motion));
+        //link(dac, "Spine1", 1f, copyMotion(motion));
+        //link(dac, "Spine2", 1f, copyMotion(motion));
+        //link(dac, "Neck", 1f, copyMotion(motion));
         //link(dac, "Head", 1f, copyMotion(motion));
         //link(dac, "LeftShoulder", 1f, copyMotion(motion));
         link(dac, "LeftArm", 1f, copyMotion(motion));
-        link(dac, "LeftForeArm", 1f, copyMotion(motion));
+        //link(dac, "LeftForeArm", 1f, copyMotion(motion));
         //link(dac, "LeftHand", 1f, copyMotion(motion));
         //link(dac, "RightShoulder", 1f, copyMotion(motion));
         link(dac, "RightArm", 1f, copyMotion(motion));
-        link(dac, "RightForeArm", 1f, copyMotion(motion));
+        //link(dac, "RightForeArm", 1f, copyMotion(motion));
         //link(dac, "RightHand", 1f, copyMotion(motion));
         link(dac, "LeftUpLeg", 1f, copyMotion(motion));
-        link(dac, "LeftLeg", 1f, copyMotion(motion));
+        //link(dac, "LeftLeg", 1f, copyMotion(motion));
         //link(dac, "LeftFoot", 1f, copyMotion(motion));
         link(dac, "RightUpLeg", 1f, copyMotion(motion));
-        link(dac, "RightLeg", 1f, copyMotion(motion));
+        //link(dac, "RightLeg", 1f, copyMotion(motion));
         //link(dac, "RightFoot", 1f, copyMotion(motion));
         skin.getSpatial().addControl(dac);
+        for (var body : dac.listRigidBodies()) {
+            body.getCollisionShape().setMargin(.0001f);
+        }
         getPhysicsSpace().add(dac);
     }
     
