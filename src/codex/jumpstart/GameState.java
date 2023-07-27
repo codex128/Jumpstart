@@ -385,7 +385,7 @@ public class GameState extends GameAppState implements
             //Tweens.callMethod(layerControl, "enter", "death", "freeze")
             Tweens.sequence(
                 Tweens.delay(.5f),
-                Tweens.callMethod(this, "kill")
+                Tweens.callMethod(this, "startRagdollPhysics")
             )
         )));
         
