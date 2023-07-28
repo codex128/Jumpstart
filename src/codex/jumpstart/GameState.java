@@ -87,7 +87,7 @@ public class GameState extends GameAppState implements
         initIllumination();
         initCamera(ybot);
         initAnimations();
-        initRagdoll();
+        //initRagdoll();
         initAudio();
         initInputs();
         
@@ -197,18 +197,18 @@ public class GameState extends GameAppState implements
             control.jump();
         }
         else if (func == Functions.F_DIE_IMPACT && value != InputState.Off) {
-            startRagdollPhysics();
-//            if (!layerControl.isActive("death")) {
-//                layerControl.enter("death", "die-impact");
-//                if (layerControl.isActive("gun")) {
-//                    layerControl.exit("gun");
-//                    switchCameraModes();
-//                    speedfactor = 0f;
-//                }
-//            }
-//            else {
-//                layerControl.exit("death");
-//            }
+            //startRagdollPhysics();
+            if (!layerControl.isActive("death")) {
+                layerControl.enter("death", "die-impact");
+                if (layerControl.isActive("gun")) {
+                    layerControl.exit("gun");
+                    switchCameraModes();
+                    speedfactor = 0f;
+                }
+            }
+            else {
+                layerControl.exit("death");
+            }
         }
     }
     @Override
@@ -380,13 +380,13 @@ public class GameState extends GameAppState implements
         )));
         anim.action("holster-pistol-once").setSpeed(4);
         anim.action("sneaking").setSpeed(.7);
-        anim.addAction("die-impact", new BaseAction(Tweens.parallel(
+        anim.addAction("die-impact", new BaseAction(Tweens.sequence(
             anim.action("killed"),
-            //Tweens.callMethod(layerControl, "enter", "death", "freeze")
-            Tweens.sequence(
-                Tweens.delay(.5f),
-                Tweens.callMethod(this, "startRagdollPhysics")
-            )
+            Tweens.callMethod(layerControl, "enter", "death", "freeze")
+//            Tweens.sequence(
+//                Tweens.delay(.5f),
+//                Tweens.callMethod(this, "startRagdollPhysics")
+//            )
         )));
         
         // theoretical animation setup
