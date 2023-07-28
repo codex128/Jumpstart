@@ -197,18 +197,17 @@ public class GameState extends GameAppState implements
             control.jump();
         }
         else if (func == Functions.F_DIE_IMPACT && value != InputState.Off) {
-            startRagdollPhysics();
-//            if (!layerControl.isActive("death")) {
-//                layerControl.enter("death", "die-impact");
-//                if (layerControl.isActive("gun")) {
-//                    layerControl.exit("gun");
-//                    switchCameraModes();
-//                    speedfactor = 0f;
-//                }
-//            }
-//            else {
-//                layerControl.exit("death");
-//            }
+            if (!layerControl.isActive("death")) {
+                layerControl.enter("death", "die-impact");
+                if (layerControl.isActive("gun")) {
+                    layerControl.exit("gun");
+                    switchCameraModes();
+                    speedfactor = 0f;
+                }
+            }
+            else {
+                layerControl.exit("death");
+            }
         }
     }
     @Override
@@ -259,6 +258,7 @@ public class GameState extends GameAppState implements
     private Spatial initPlayer(Vector3f startLocation) {
         J3map character = (J3map)assetManager.loadAsset("Properties/YBot.j3map");
         Spatial ybot = assetManager.loadModel(character.getString("model"));
+        ybot.setLocalScale(.01f);
         ybot.setCullHint(Spatial.CullHint.Never);
         ybot.setShadowMode(RenderQueue.ShadowMode.Cast);
         anim = fetchControl(ybot, AnimComposer.class);
@@ -384,7 +384,7 @@ public class GameState extends GameAppState implements
             anim.action("killed"),
             //Tweens.callMethod(layerControl, "enter", "death", "freeze")
             Tweens.sequence(
-                Tweens.delay(.5f),
+                Tweens.delay(1),
                 Tweens.callMethod(this, "startRagdollPhysics")
             )
         )));
@@ -493,28 +493,21 @@ public class GameState extends GameAppState implements
     private void initRagdoll() {
         dac = new DynamicAnimControl();
         dac.setMass(DacConfiguration.torsoName, 1f);
-        // default range of motion used for testing
-        var motion = new RangeOfMotion(0f, 0f, 0f, 0f, 0f, 0f);
-        //link(dac, "Hips", 1f, motion);
-        link(dac, "Spine", 1f, motion);
-        //link(dac, "Spine1", 1f, motion);
-        //link(dac, "Spine2", 1f, motion);
-        //link(dac, "Neck", 1f, motion);
-        //link(dac, "Head", 1f, motion);
-        //link(dac, "LeftShoulder", 1f, motion);
-        link(dac, "LeftArm", 1f, motion);
-        //link(dac, "LeftForeArm", 1f, motion);
-        //link(dac, "LeftHand", 1f, motion);
-        //link(dac, "RightShoulder", 1f, motion);
-        link(dac, "RightArm", 1f, motion);
-        //link(dac, "RightForeArm", 1f, motion);
-        //link(dac, "RightHand", 1f, motion);
-        link(dac, "LeftUpLeg", 1f, motion);
-        //link(dac, "LeftLeg", 1f, motion);
-        //link(dac, "LeftFoot", 1f, motion);
-        link(dac, "RightUpLeg", 1f, motion);
-        //link(dac, "RightLeg", 1f, motion);
-        //link(dac, "RightFoot", 1f, motion);
+        var motion = motion(true, 0.1f, -0.1f, 0.1f, -0.1f, 0.1f, -0.1f);
+        link(dac, "Spine", 1f,          motion);
+        link(dac, "Spine1", 1f,         motion);
+        link(dac, "Spine2", 1f,         motion);
+        link(dac, "Neck", 1f,           motion);
+        link(dac, "LeftArm", 1f,        motion);
+        link(dac, "LeftForeArm", 1f,    motion);
+        link(dac, "RightArm", 1f,       motion);
+        link(dac, "RightForeArm", 1f,   motion);
+        link(dac, "LeftUpLeg", 1f,      motion);
+        link(dac, "LeftLeg", 1f,        motion);
+        link(dac, "LeftFoot", 1f,       motion);
+        link(dac, "RightUpLeg", 1f,     motion);
+        link(dac, "RightLeg", 1f,       motion);
+        link(dac, "RightFoot", 1f,      motion);
         dac.setIgnoredHops(20);
         // add the DAC to the same spatial as the SkinningControl
         skin.getSpatial().addControl(dac);
@@ -535,6 +528,13 @@ public class GameState extends GameAppState implements
      */
     private void link(DynamicAnimControl dac, String joint, float mass, RangeOfMotion motion) {
         dac.link("mixamorig:"+joint, mass, motion);
+    }
+    private RangeOfMotion motion(boolean multByPi, float... values) {
+        assert values.length == 6;
+        if (multByPi) for (int i = 0; i < values.length; i++) {
+            values[i] *= FastMath.PI;
+        }
+        return new RangeOfMotion(values[0], values[1], values[2], values[3], values[4], values[5]);
     }
     
 }
