@@ -78,6 +78,7 @@ public class GameState extends GameAppState implements
     private Spatial gun;
     private SFXSpeaker gunShotSound;
     private DynamicAnimControl dac;
+    private boolean aimShifting = false;
     
     @Override
     protected void init(Application app) {
@@ -118,8 +119,8 @@ public class GameState extends GameAppState implements
     @Override
     public void update(float tpf) {
         Vector3f walkDir = new Vector3f();
-        if (inputdirection.z != 0 || inputdirection.x != 0) {
-            if (orbital.isEnabled()) {
+        if (!layerControl.isActive("gun")) {            
+            if (inputdirection.z != 0 || inputdirection.x != 0) {
                 Quaternion rotation = new Quaternion().lookAt(orbital.getPlanarCameraDirection(), Vector3f.UNIT_Y);
                 walkDir.set(rotation.getRotationColumn(2));
                 walkDir.multLocal(inputdirection.z);
@@ -129,11 +130,15 @@ public class GameState extends GameAppState implements
                 currentDir.nlerp(desiredDir, .1f);
                 movement.setWalkDirection(currentDir.mult(Vector3f.UNIT_Z));
             }
-            else {
-                
-            }
+            movement.setWalkSpeed(Math.max(FastMath.abs(inputdirection.z), FastMath.abs(inputdirection.x))*getMoveSpeed());
         }
-        movement.setWalkSpeed(Math.max(FastMath.abs(inputdirection.z), FastMath.abs(inputdirection.x))*getMoveSpeed());
+        else if (aimShifting) {
+            if (inputdirection.z != 0 || inputdirection.x != 0) {
+                Quaternion rotation = new Quaternion().lookAt(movement.getViewDirection(), Vector3f.UNIT_Y);
+                movement.setWalkDirection(rotation.getRotationColumn(2).multLocal(inputdirection.z).addLocal(rotation.getRotationColumn(0).multLocal(-inputdirection.x)).normalizeLocal());
+            }
+            movement.setWalkSpeed(Math.max(FastMath.abs(inputdirection.z), FastMath.abs(inputdirection.x))*walkspeed);
+        }
         if (shoulder.isEnabled()) {
             shoulder.setSubjectTranslation(control.getRigidBody().getPhysicsLocation());
             //shoulder.setSubjectRotation(control.getRigidBody().getPhysicsRotation());
@@ -154,22 +159,25 @@ public class GameState extends GameAppState implements
             else if (func == Functions.F_STRAFE) {
                 inputdirection.x = FastMath.sign((float)value);
             }
-            if (!sneaking && sprinting && (speedfactor += tpf) > 1f) {
-                speedfactor = 1f;
-            }
-            else if ((sneaking || !sprinting) && (speedfactor -= tpf) < 0f) {
-                speedfactor = 0f;
+            if (!layerControl.isActive("gun")) {
+                if (!sneaking && sprinting && (speedfactor += tpf) > 1f) {
+                    speedfactor = 1f;
+                }
+                else if ((sneaking || !sprinting) && (speedfactor -= tpf) < 0f) {
+                    speedfactor = 0f;
+                }
             }
         }
         if (layerControl.isActive("gun")) {
             if (func == Functions.F_AIM_XZ) {
-                movement.setWalkDirection(new Quaternion().fromAngleAxis((float)value*-.05f, Vector3f.UNIT_Y).mult(movement.getWalkDirection()));
+                movement.setViewDirection(new Quaternion().fromAngleAxis((float)value*-.05f, Vector3f.UNIT_Y).mult(movement.getViewDirection()));
+                movement.setWalkDirection(movement.getViewDirection());
             }
         }
     }    
     @Override
     public void valueChanged(FunctionId func, InputState value, double tpf) {
-        if (func == Functions.F_SPRINT && isAlive() && value == InputState.Positive) {
+        if (!layerControl.isActive("gun") && func == Functions.F_SPRINT && isAlive() && value == InputState.Positive) {
             //sprinting = value == InputState.Positive;
             // repurposing sprint function for sneaking temporarily
             sneaking = !sneaking;
@@ -191,11 +199,18 @@ public class GameState extends GameAppState implements
         }
         else if (func == Functions.F_SHOOT && isAlive()) {
             if (!layerControl.get("gun").isActive() && value == InputState.Positive) {
+                layerControl.exit("move");
                 layerControl.get("gun").enter("draw-pistol-once");
+                movement.setFaceWalkDirection(false);
+                movement.setWalkSpeed(0f);
+                speedfactor = 0f;
             }
             else if (layerControl.get("gun").isActive() && value == InputState.Off) {
                 layerControl.get("gun").enter("holster-pistol-once");
+                movement.setFaceWalkDirection(true);
                 switchCameraModes();
+                movement.setWalkSpeed(0f);
+                enableAimShifting(false);
             }
         }
         else if (func == Functions.F_JUMP && isAlive() && value == InputState.Positive
@@ -210,10 +225,12 @@ public class GameState extends GameAppState implements
                     layerControl.exit("gun");
                     switchCameraModes();
                     speedfactor = 0f;
+                    movement.setFaceWalkDirection(false);
                 }
             }
             else {
                 layerControl.exit("death");
+                movement.setFaceWalkDirection(true);
             }
         }
     }
@@ -221,16 +238,18 @@ public class GameState extends GameAppState implements
     public void walkDirectionChanged(Vector3f oldDir, Vector3f newDir) {}
     @Override
     public void moveSpeedChanged(float oldSpeed, float newSpeed, float delta) {
-        if (newSpeed == 0f) {
-            layerControl.exit("move");
-            speedfactor = 0f;
-            return;
+        if (!layerControl.isActive("gun")) {
+            if (newSpeed == 0f) {
+                layerControl.exit("move");
+                speedfactor = 0f;
+                return;
+            }
+            if (oldSpeed == 0f) {
+                if (sneaking) layerControl.enter("move", "sneaking");
+                else layerControl.enter("move", "walk->run");
+            }
+            ((BlendAction)anim.action("walk->run")).getBlendSpace().setValue(speedfactor);
         }
-        if (oldSpeed == 0f) {
-            if (sneaking) layerControl.enter("move", "sneaking");
-            else layerControl.enter("move", "walk->run");
-        }
-        ((BlendAction)anim.action("walk->run")).getBlendSpace().setValue(speedfactor);
     }
     @Override
     public void velocityChanged(Vector3f oldVel, Vector3f newVel) {
@@ -340,16 +359,16 @@ public class GameState extends GameAppState implements
         anim.addAction("freeze", new BaseAction(anim.action("idle")));
         anim.action("freeze").setSpeed(0);
         var idle = (ClipAction)anim.action("idle");
-        idle.setMaxTransitionWeight(.5f);
+        idle.setMaxTransitionWeight(.5);
         layerControl.enter("idle", "idle");
-        ((ClipAction)anim.action("walk")).setMaxTransitionWeight(.5);
-        ((ClipAction)anim.action("sprint")).setMaxTransitionWeight(.5);
-        anim.actionBlended("walk->run", new LinearBlendSpace(0f, 1f), "walk", "sprint");
+        var walkRun = anim.actionBlended("walk->run", new LinearBlendSpace(0f, 1f), "walk", "sprint");
+        walkRun.setMaxTransitionWeight(.5);
         anim.actionSequence("land-once",
             anim.action("landing"),
             Tweens.callMethod(layerControl, "exit", "jump")
         );
-        ((ClipAction)anim.action("aim-pistol")).setMaxTransitionWeight(1);
+        ((ClipAction)anim.action("aim-pistol")).setMaxTransitionWeight(.8);
+        ((ClipAction)anim.action("shoot-pistol")).setMaxTransitionWeight(.9);
         anim.addAction("shoot-cycle", new BaseAction(Tweens.sequence(
             Tweens.loopDuration(.2f, anim.action("aim-pistol")),
             Tweens.parallel(
@@ -365,6 +384,7 @@ public class GameState extends GameAppState implements
         anim.addAction("draw-pistol-once", new BaseAction(Tweens.parallel(
             Tweens.sequence(
                 anim.action("draw-pistol"),
+                Tweens.callMethod(this, "enableAimShifting", true),
                 Tweens.callMethod(this, "switchCameraModes"),
                 Tweens.callMethod(layerControl, "enter", "gun", "shoot-cycle")
             ),
@@ -459,6 +479,10 @@ public class GameState extends GameAppState implements
         }
         return null;
     }
+    private float ofGreaterMagnitude(float a, float b) {
+        if (FastMath.abs(a) >= FastMath.abs(b)) return a;
+        return b;
+    }
     
     public void switchCameraModes() {
         orbital.setEnabled(shoulder.isEnabled());
@@ -474,6 +498,9 @@ public class GameState extends GameAppState implements
     }
     public void playGunShot() {
         gunShotSound.playInstance();
+    }
+    public void enableAimShifting(boolean enable) {
+        aimShifting = enable;
     }
     
     /**
