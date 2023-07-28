@@ -161,6 +161,11 @@ public class GameState extends GameAppState implements
                 speedfactor = 0f;
             }
         }
+        if (layerControl.isActive("gun")) {
+            if (func == Functions.F_AIM_XZ) {
+                movement.setWalkDirection(new Quaternion().fromAngleAxis((float)value*-.05f, Vector3f.UNIT_Y).mult(movement.getWalkDirection()));
+            }
+        }
     }    
     @Override
     public void valueChanged(FunctionId func, InputState value, double tpf) {
@@ -193,7 +198,8 @@ public class GameState extends GameAppState implements
                 switchCameraModes();
             }
         }
-        else if (func == Functions.F_JUMP && isAlive() && value == InputState.Positive && control.isOnGround()) {
+        else if (func == Functions.F_JUMP && isAlive() && value == InputState.Positive
+                && control.isOnGround() && !layerControl.isActive("gun")) {
             control.jump();
         }
         else if (func == Functions.F_DIE_IMPACT && value != InputState.Off) {
@@ -349,7 +355,7 @@ public class GameState extends GameAppState implements
             Tweens.parallel(
                 anim.action("shoot-pistol"),
                 Tweens.sequence(
-                    Tweens.delay(.1f),
+                    Tweens.delay(.1),
                     Tweens.callMethod(this, "playGunShot")
                 )
             )
@@ -415,7 +421,9 @@ public class GameState extends GameAppState implements
     private void initInputs() {
         inputMapper.addAnalogListener(this,
                 Functions.F_WALK,
-                Functions.F_STRAFE);
+                Functions.F_STRAFE,
+                Functions.F_AIM_XZ,
+                Functions.F_AIM_Y);
         inputMapper.addStateListener(this,
                 Functions.F_JUMP,
                 Functions.F_SPRINT,
