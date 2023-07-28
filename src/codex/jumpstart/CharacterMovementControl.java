@@ -115,8 +115,14 @@ public class CharacterMovementControl extends SubControl<BetterCharacterControl>
     public Vector3f getWalkDirection(Vector3f store) {
         return store.set(walk);
     }
+    public Vector3f getWalkDirection() {
+        return walk.clone();
+    }
     public Vector3f getViewDirection(Vector3f store) {
         return store.set(view);
+    }
+    public Vector3f getViewDirection() {
+        return view.clone();
     }
     public float getWalkSpeed() {
         return speed;
