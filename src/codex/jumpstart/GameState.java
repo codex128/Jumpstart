@@ -88,7 +88,7 @@ public class GameState extends GameAppState implements
         initIllumination();
         initCamera(ybot);
         initAnimations();
-        //initRagdoll();
+        initRagdoll();
         initAudio();
         initInputs();
         
@@ -218,6 +218,7 @@ public class GameState extends GameAppState implements
             control.jump();
         }
         else if (func == Functions.F_DIE_IMPACT && value != InputState.Off) {
+            //startRagdollPhysics();
             if (!layerControl.isActive("death")) {
                 layerControl.enter("death", "die-impact");
                 if (layerControl.isActive("gun")) {
@@ -226,10 +227,6 @@ public class GameState extends GameAppState implements
                     speedfactor = 0f;
                     movement.setFaceWalkDirection(false);
                 }
-            }
-            else {
-                layerControl.exit("death");
-                movement.setFaceWalkDirection(true);
             }
         }
     }
@@ -527,7 +524,7 @@ public class GameState extends GameAppState implements
     private void initRagdoll() {
         dac = new DynamicAnimControl();
         dac.setMass(DacConfiguration.torsoName, 1f);
-        var motion = motion(true, 0.1f, -0.1f, 0.1f, -0.1f, 0.1f, -0.1f);
+        var motion = motion(false, .7f, -.7f, .7f, -.7f, .7f, -.7f);
         link(dac, "Spine", 1f,          motion);
         link(dac, "Spine1", 1f,         motion);
         link(dac, "Spine2", 1f,         motion);

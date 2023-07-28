@@ -1,5 +1,5 @@
 name: "YBot";
-model: "Models/characters/YBot-fixed.j3o";
+model: "Models/characters/YBot.j3o";
 radius: .25f;
 height: 2f;
 mass: 175f;
