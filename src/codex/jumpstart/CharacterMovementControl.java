@@ -31,11 +31,11 @@ public class CharacterMovementControl extends SubControl<BetterCharacterControl>
     private boolean autoFriction = true;
     private final LinkedList<CharacterMovementListener> listeners = new LinkedList<>();
     
-    public CharacterMovementControl(Class<BetterCharacterControl> type) {
-        super(type);
+    public CharacterMovementControl() {
+        super(BetterCharacterControl.class);
     }
-    public CharacterMovementControl(Class<BetterCharacterControl> type, boolean persistant) {
-        super(type, persistant);
+    public CharacterMovementControl(boolean persistant) {
+        super(BetterCharacterControl.class, persistant);
     }    
 
     @Override
