@@ -96,6 +96,7 @@ public class AnimationAppState extends ESAppState implements AnimationFactory {
         var anim = animated.getControl(AnimComposer.class);
         var skin = animated.getControl(SkinningControl.class);
         var layerControl = new AnimLayerControl();
+        animated.addControl(layerControl);
         var prefab = AnimationEvent.createPrefab(e.getId(), anim);
         layerControl.createSet(anim, skin, mask -> mask.addAll(),
                 "idle", "move", "gun", "jump", "death");
