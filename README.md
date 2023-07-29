@@ -27,3 +27,4 @@ A game I'm coding to practice handling animations smoothly and consistantly in J
 * [Minie](https://github.com/stephengold/Minie) (latest version is highly suggested)
 * [J3map](https://github.com/codex128/J3map)
 * [Boost](https://github.com/codex128/Boost)
+* [Zay-ES](https://github.com/jMonkeyEngine-Contributions/zay-es)
