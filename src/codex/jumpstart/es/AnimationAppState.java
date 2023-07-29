@@ -2,13 +2,15 @@
  * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
  * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
  */
-package codex.jumpstart.event;
+package codex.jumpstart.es;
 
 import codex.jumpstart.AnimLayerControl;
 import codex.jumpstart.es.AnimationFactory;
 import codex.jumpstart.es.ESAppState;
-import codex.jumpstart.es.VisualState;
+import codex.jumpstart.es.SpatialRegistry;
 import codex.jumpstart.es.components.Animation;
+import codex.jumpstart.event.AnimEventState;
+import codex.jumpstart.event.AnimationEvent;
 import com.jme3.anim.AnimComposer;
 import com.jme3.anim.SkinningControl;
 import com.jme3.anim.tween.Tweens;
@@ -32,13 +34,16 @@ public class AnimationAppState extends ESAppState implements AnimationFactory {
     private EntitySet entities;
     private HashMap<EntityId, Spatial> animations = new HashMap<>();
     private AnimationFactory factory;
-    private VisualState visuals;
+    private SpatialRegistry visuals;
     private AnimEventState events;
     
     @Override
     protected void init(Application app) {
         super.init(app);
         entities = ed.getEntities(Animation.class);
+        if (factory == null) factory = this;
+        visuals = getState(SpatialRegistry.class, true);
+        events = getState(AnimEventState.class, true);
     }
     @Override
     protected void cleanup(Application app) {

@@ -4,8 +4,12 @@
  */
 package codex.jumpstart.es;
 
+import codex.j3map.J3map;
 import codex.jumpstart.es.components.Visual;
 import com.jme3.app.Application;
+import com.jme3.math.Quaternion;
+import com.jme3.math.Vector3f;
+import com.jme3.renderer.queue.RenderQueue;
 import com.jme3.scene.Spatial;
 import com.jme3.scene.control.Control;
 import com.simsilica.es.Entity;
@@ -17,12 +21,12 @@ import java.util.HashMap;
  *
  * @author codex
  */
-public class VisualState extends ESAppState {
+public class SpatialRegistry extends ESAppState {
 
     public static final String USERDATA = "VisualState(entityId)";
     
     private EntitySet entities;
-    private HashMap<EntityId, Spatial> spatials = new HashMap<>();
+    private final HashMap<EntityId, Spatial> spatials = new HashMap<>();
     private ModelFactory factory;
     
     @Override
@@ -45,17 +49,27 @@ public class VisualState extends ESAppState {
     }
     
     private void createSpatial(Entity e) {
-        Spatial spatial = factory.create(e.get(Visual.class).getFactoryRequest());
-        spatial.setUserData(USERDATA, e.getId().getId());
+        Spatial spatial = factory.create(e.get(Visual.class).getFactoryRequest(), e.getId());
+        link(e.getId(), spatial);
         rootNode.attachChild(spatial);
-        spatials.put(e.getId(), spatial);
     }
     private void removeSpatial(Entity e) {
-        Spatial spatial = spatials.remove(e.getId());
+        var spatial = unlink(e.getId());
         if (spatial != null) {
             spatial.removeFromParent();
-            spatial.setUserData(USERDATA, null);
         }
+    }
+    
+    public boolean link(EntityId id, Spatial spatial) {
+        spatial.setUserData(USERDATA, id.getId());
+        return spatials.putIfAbsent(id, spatial) == null;
+    }
+    public Spatial unlink(EntityId id) {
+        var spatial = spatials.remove(id);
+        if (spatial != null) {
+            spatial.setUserData(USERDATA, null);            
+        }
+        return spatial;
     }
     
     public Spatial getSpatial(EntityId id) {

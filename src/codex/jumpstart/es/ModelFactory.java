@@ -5,6 +5,7 @@
 package codex.jumpstart.es;
 
 import com.jme3.scene.Spatial;
+import com.simsilica.es.EntityId;
 
 /**
  *
@@ -12,6 +13,6 @@ import com.jme3.scene.Spatial;
  */
 public interface ModelFactory {
     
-    public Spatial create(String request);
+    public Spatial create(String request, EntityId entity);
     
 }

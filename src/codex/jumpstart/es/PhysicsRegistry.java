@@ -18,7 +18,7 @@ import java.util.HashMap;
 public class PhysicsRegistry extends ESAppState {
     
     private BulletAppState bulletapp;
-    private HashMap<EntityId, PhysicsRigidBody> registry = new HashMap<>();
+    private final HashMap<EntityId, PhysicsRigidBody> registry = new HashMap<>();
     
     @Override
     protected void init(Application app) {
@@ -34,15 +34,16 @@ public class PhysicsRegistry extends ESAppState {
     @Override
     protected void onDisable() {}
     
-    public void register(EntityId id, PhysicsRigidBody body) {
+    public void link(EntityId id, PhysicsRigidBody body) {
         if (body != null) registry.put(id, body);
         else registry.remove(id);
     }
+    public PhysicsRigidBody unlink(EntityId id) {
+        return registry.remove(id);
+    }
+    
     public PhysicsRigidBody get(EntityId id) {
         return registry.get(id);
-    }
-    public PhysicsRigidBody remove(EntityId id) {
-        return registry.remove(id);
     }
     
     public BulletAppState getBulletAppState() {
