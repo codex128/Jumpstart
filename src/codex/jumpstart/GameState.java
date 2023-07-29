@@ -350,7 +350,7 @@ public class GameState extends GameAppState implements
     }
     private void initAnimations() {
         skin = anim.getSpatial().getControl(SkinningControl.class);
-        layerControl = new AnimLayerControl(AnimComposer.class);
+        layerControl = new AnimLayerControl();
         anim.getSpatial().addControl(layerControl);
         AnimationFabricator.fabricate(this, anim.getSpatial());
     }

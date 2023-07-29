@@ -10,11 +10,11 @@ import com.simsilica.es.EntityComponent;
  *
  * @author codex
  */
-public class Visual implements EntityComponent {
+public class Animation implements EntityComponent {
     
     private final String request;
     
-    public Visual(String request) {
+    public Animation(String request) {
         this.request = request;
     }
     
@@ -23,7 +23,7 @@ public class Visual implements EntityComponent {
     }
     @Override
     public String toString() {
-        return "Visual[request="+request+"]";
+        return "Animation[request="+request+"]";
     }
     
 }

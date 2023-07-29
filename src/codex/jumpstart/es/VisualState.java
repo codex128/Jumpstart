@@ -45,7 +45,7 @@ public class VisualState extends ESAppState {
     }
     
     private void createSpatial(Entity e) {
-        Spatial spatial = factory.create(e.get(Visual.class).getModelRequest());
+        Spatial spatial = factory.create(e.get(Visual.class).getFactoryRequest());
         spatial.setUserData(USERDATA, e.getId().getId());
         rootNode.attachChild(spatial);
         spatials.put(e.getId(), spatial);

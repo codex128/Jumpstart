@@ -21,11 +21,11 @@ public class AnimLayerControl extends SubControl<AnimComposer> {
     
     HashMap<String, LayerController> controllers = new HashMap<>();
     
-    public AnimLayerControl(Class<AnimComposer> type) {
-        super(type);
+    public AnimLayerControl() {
+        super(AnimComposer.class);
     }
-    public AnimLayerControl(Class<AnimComposer> type, boolean persistant) {
-        super(type, persistant);
+    public AnimLayerControl(boolean persistant) {
+        super(AnimComposer.class, persistant);
     }
     
     @Override
