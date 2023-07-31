@@ -4,13 +4,13 @@
  */
 package codex.jumpstart.es.components;
 
-import com.simsilica.es.EntityComponent;
+import codex.jumpstart.es.factory.FactoryRequest;
 
 /**
  *
  * @author codex
  */
-public class Visual implements EntityComponent {
+public class Visual implements FactoryRequest {
     
     private final String request;
     
@@ -18,7 +18,8 @@ public class Visual implements EntityComponent {
         this.request = request;
     }
     
-    public String getFactoryRequest() {
+    @Override
+    public String getRequest() {
         return request;
     }
     @Override

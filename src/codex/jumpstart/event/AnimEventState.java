@@ -4,40 +4,40 @@
  */
 package codex.jumpstart.event;
 
-import codex.boost.GameAppState;
 import codex.boost.Listenable;
-import com.jme3.anim.tween.Tween;
-import com.jme3.anim.tween.Tweens;
+import codex.jumpstart.es.ESAppState;
 import com.jme3.app.Application;
 import java.util.Collection;
 import java.util.LinkedList;
 
 /**
- *
+ * State where {@link AnimEventListeners} can listen to all globally
+ * broadcasted animation events.
+ * 
  * @author codex
  */
-public class AnimEventState extends GameAppState implements Listenable<AnimEventListener>{
-
-    private final LinkedList<AnimEventListener> listeners = new LinkedList<>();
+public class AnimEventState extends ESAppState
+        implements AnimEventListener, Listenable<AnimEventListener> {
+    
+    private LinkedList<AnimEventListener> listeners = new LinkedList<>();
     
     @Override
     protected void init(Application app) {}
     @Override
-    protected void cleanup(Application app) {}
+    protected void cleanup(Application app) {
+        clearAllListeners();
+    }
     @Override
     protected void onEnable() {}
     @Override
     protected void onDisable() {}
     @Override
+    public void animationEvent(AnimationEvent event) {
+        listeners.stream().forEach(l -> l.animationEvent(event));
+    }
+    @Override
     public Collection<AnimEventListener> getListeners() {
         return listeners;
-    }
-    
-    public void event(AnimationEvent event) {
-        notifyListeners(l -> l.animationEvent(event));
-    }
-    public Tween tween(AnimationEvent event) {
-        return Tweens.callMethod(this, "event", event);
     }
     
 }

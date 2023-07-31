@@ -17,8 +17,9 @@ public abstract class ESAppState extends GameAppState {
     protected EntityData ed;
     
     @Override
-    protected void init(Application app) {
+    protected void initialize(Application app) {
         ed = getState(EntityAppState.class, true).getEntityData();
+        super.initialize(app);
     }
     
 }

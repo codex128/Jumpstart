@@ -5,12 +5,10 @@ import codex.j3map.processors.BooleanProcessor;
 import codex.j3map.processors.FloatProcessor;
 import codex.j3map.processors.IntegerProcessor;
 import codex.j3map.processors.StringProcessor;
-import codex.jumpstart.es.AnimationAppState;
-import codex.jumpstart.es.ObjectRegistry;
+import codex.jumpstart.es.registry.AnimationRegistry;
 import codex.jumpstart.es.EntityAppState;
-import codex.jumpstart.es.PhysicsRegistry;
-import codex.jumpstart.es.SpatialRegistry;
-import codex.jumpstart.event.AnimEventState;
+import codex.jumpstart.es.registry.PhysicsRegistry;
+import codex.jumpstart.es.system.VisualState;
 import com.jme3.app.SimpleApplication;
 import com.jme3.bullet.BulletAppState;
 import com.jme3.environment.EnvironmentCamera;
@@ -58,11 +56,9 @@ public class Main extends SimpleApplication {
         stateManager.attach(bulletapp);
         
         stateManager.attachAll(new EntityAppState(),
-                new SpatialRegistry(),
+                new VisualState(),
                 new PhysicsRegistry(),
-                new ObjectRegistry(),
-                new AnimEventState(),
-                new AnimationAppState());
+                new AnimationRegistry());
         
         var envCam = new EnvironmentCamera();
         stateManager.attach(envCam);
