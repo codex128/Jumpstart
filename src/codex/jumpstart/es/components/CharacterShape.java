@@ -10,11 +10,11 @@ import com.simsilica.es.EntityComponent;
  *
  * @author codex
  */
-public class CharacterPhysics implements EntityComponent {
+public class CharacterShape implements EntityComponent {
     
     private final float radius, height, mass;
     
-    public CharacterPhysics(float radius, float height, float mass) {
+    public CharacterShape(float radius, float height, float mass) {
         this.radius = radius;
         this.height = height;
         this.mass = mass;

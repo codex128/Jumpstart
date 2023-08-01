@@ -10,22 +10,23 @@ import com.simsilica.es.EntityComponent;
  *
  * @author codex
  */
-public class Visual implements EntityComponent {
+public class Mass implements EntityComponent {
     
-    private String request;
+    private final float mass;
     
-    public Visual() {}
-    public Visual(String request) {
-        this.request = request;
+    public Mass() {
+        this(0f);
+    }
+    public Mass(float mass) {
+        this.mass = mass;
     }
 
-    public String getRequest() {
-        return request;
+    public float getMass() {
+        return mass;
     }
-    
     @Override
     public String toString() {
-        return "Visual{}";
+        return "Mass{" + "mass=" + mass + '}';
     }
     
 }

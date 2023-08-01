@@ -10,22 +10,21 @@ import com.simsilica.es.EntityComponent;
  *
  * @author codex
  */
-public class Visual implements EntityComponent {
+public class TargetSpeed implements EntityComponent {
     
-    private String request;
-    
-    public Visual() {}
-    public Visual(String request) {
-        this.request = request;
+    private final float target;
+
+    public TargetSpeed(float target) {
+        this.target = target;
     }
 
-    public String getRequest() {
-        return request;
+    public float getTarget() {
+        return target;
     }
-    
+
     @Override
     public String toString() {
-        return "Visual{}";
+        return "TargetSpeed{" + "target=" + target + '}';
     }
     
 }

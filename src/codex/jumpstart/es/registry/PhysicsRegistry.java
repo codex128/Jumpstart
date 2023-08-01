@@ -8,7 +8,7 @@ import com.jme3.app.Application;
 import com.jme3.bullet.BulletAppState;
 import com.jme3.bullet.PhysicsSpace;
 import com.jme3.bullet.objects.PhysicsRigidBody;
-import com.simsilica.es.EntitySet;
+import com.simsilica.es.EntityId;
 
 /**
  * Physics registry.
@@ -23,6 +23,10 @@ public class PhysicsRegistry extends Registry<PhysicsRigidBody> {
     
     private BulletAppState bulletapp;
     
+    public PhysicsRegistry() {
+        
+    }
+    
     @Override
     protected void init(Application app) {
         bulletapp = getState(BulletAppState.class, true);
@@ -31,8 +35,17 @@ public class PhysicsRegistry extends Registry<PhysicsRigidBody> {
     protected void onEnable() {}
     @Override
     protected void onDisable() {}
-    @Override
-    public void update(float tpf) {}
+    
+    public boolean link(EntityId id, PhysicsRigidBody body, boolean addToSpace) {
+        var linked = link(id, body);
+        if (linked && addToSpace) getPhysicsSpace().add(body);
+        return linked;
+    }
+    public PhysicsRigidBody unlink(EntityId id, boolean removeFromSpace) {
+        var body = unlink(id);
+        if (removeFromSpace) getPhysicsSpace().remove(body);
+        return body;
+    }
     
     public BulletAppState getBulletAppState() {
         return bulletapp;

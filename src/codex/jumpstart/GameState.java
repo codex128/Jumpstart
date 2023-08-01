@@ -52,13 +52,13 @@ import jme3utilities.sky.Updater;
  * @author codex
  */
 public class GameState extends GameAppState implements
-        AnalogFunctionListener, StateFunctionListener, CharacterMovementListener {
+        AnalogFunctionListener, StateFunctionListener, CharacterWalkListener {
     
     private Node scene;
     private AnimComposer anim;
     private SkinningControl skin;
     private AnimLayerControl layerControl;
-    private CharacterMovementControl movement;
+    private CharacterWalkControl movement;
     private MyCharacterControl control;
     private OrbitalCamera orbital;
     private ShoulderCamera shoulder;
@@ -283,7 +283,7 @@ public class GameState extends GameAppState implements
         ybot.addControl(control);
         getPhysicsSpace().add(control);
         control.getRigidBody().setCcdMotionThreshold(0f);
-        movement = new CharacterMovementControl();
+        movement = new CharacterWalkControl();
         movement.setFaceWalkDirection(true);
         movement.addListener(this);
         ybot.addControl(movement);

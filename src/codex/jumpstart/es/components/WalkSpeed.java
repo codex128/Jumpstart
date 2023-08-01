@@ -10,22 +10,16 @@ import com.simsilica.es.EntityComponent;
  *
  * @author codex
  */
-public class Visual implements EntityComponent {
+public class WalkSpeed implements EntityComponent {
     
-    private String request;
+    private final float speed;
     
-    public Visual() {}
-    public Visual(String request) {
-        this.request = request;
-    }
-
-    public String getRequest() {
-        return request;
+    public WalkSpeed(float speed) {
+        this.speed = speed;
     }
     
-    @Override
-    public String toString() {
-        return "Visual{}";
+    public float getSpeed() {
+        return speed;
     }
     
 }

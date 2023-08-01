@@ -10,20 +10,21 @@ import com.simsilica.es.EntityComponent;
  *
  * @author codex
  */
-public class MovementMode implements EntityComponent {
+public class MaxWalkSpeed implements EntityComponent {
     
-    private final Class mode;
+    private final float speed;
     
-    public MovementMode(Class mode) {
-        this.mode = mode;
+    public MaxWalkSpeed(float speed) {
+        assert speed >= 0;
+        this.speed = speed;
     }
-    
-    public Class getMode() {
-        return mode;
+
+    public float getSpeed() {
+        return speed;
     }
     @Override
     public String toString() {
-        return "MovementMode{" + "mode=" + mode + '}';
-    }    
+        return "MaxMoveSpeed{" + "speed=" + speed + '}';
+    }
     
 }

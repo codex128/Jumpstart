@@ -18,11 +18,13 @@ public class AnimationEvent {
     private final String name;
     private final EntityId entity;
     private final AnimComposer anim;
+    private final Object[] arguments;
     
-    public AnimationEvent(String name, EntityId entity, AnimComposer anim) {
+    public AnimationEvent(String name, EntityId entity, AnimComposer anim, Object... arguments) {
         this.name = name;
         this.entity = entity;
         this.anim = anim;
+        this.arguments = arguments;
     }
     
     public String getName() {
@@ -40,6 +42,13 @@ public class AnimationEvent {
     }
     public AnimComposer getAnimComposer() {
         return anim;
+    }
+    /**
+     * Useful for calling specific methods.
+     * @return 
+     */
+    public Object[] getArguments() {
+        return arguments;
     }
     /**
      * Get a control from the animated spatial.
@@ -62,6 +71,9 @@ public class AnimationEvent {
         
         public AnimationEvent create(String name) {
             return new AnimationEvent(name, getEntityId(), getAnimComposer());
+        }
+        public AnimationEvent create(String name, Object... arguments) {
+            return new AnimationEvent(name, getEntityId(), getAnimComposer(), arguments);
         }
         
     }

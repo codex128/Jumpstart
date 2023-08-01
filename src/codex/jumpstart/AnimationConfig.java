@@ -5,7 +5,6 @@
 package codex.jumpstart;
 
 import codex.boost.scene.SceneGraphIterator;
-import codex.jumpstart.AnimLayerControl;
 import codex.jumpstart.event.AnimEventListener;
 import codex.jumpstart.event.AnimationEvent;
 import com.jme3.anim.AnimComposer;
@@ -24,7 +23,7 @@ import com.simsilica.es.EntityId;
  */
 public class AnimationConfig {
     
-    public static void configurePlayerAnimations(EntityId entity, Spatial animated, AnimEventListener events) {
+    public static void configurePlayerAnimations(EntityId entity, Spatial animated, AnimEventListener listener) {
         // get animation fields
         var anim = getControl(animated, AnimComposer.class);
         var skin = getControl(animated, SkinningControl.class);
@@ -58,7 +57,7 @@ public class AnimationConfig {
                 anim.action("shoot-pistol"),
                 Tweens.sequence(
                     Tweens.delay(.1),
-                    events.tween(prefab.create("playGunShot"))
+                    listener.tween(prefab.create("playGunShot"))
                 )
             )
         )));
@@ -67,13 +66,13 @@ public class AnimationConfig {
         anim.addAction("draw-pistol-once", new BaseAction(Tweens.parallel(
             Tweens.sequence(
                 anim.action("draw-pistol"),
-                events.tween(prefab.create("enableAimShifting")),
-                events.tween(prefab.create("switchCameraModes")),
+                listener.tween(prefab.create("enableAimShifting", true)),
+                listener.tween(prefab.create("switchCameraModes")),
                 Tweens.callMethod(layerControl, "enter", "gun", "shoot-cycle")
             ),
             Tweens.sequence(
                 Tweens.delay(.5f),
-                events.tween(prefab.create("putGunInHand"))
+                listener.tween(prefab.create("putGunInHand"))
             )
         )));
         anim.action("draw-pistol-once").setSpeed(4);
@@ -84,18 +83,15 @@ public class AnimationConfig {
             ),
             Tweens.sequence(
                 Tweens.delay(1.5f),
-                events.tween(prefab.create("putGunInHolster"))
+                listener.tween(prefab.create("putGunInHolster"))
             )
         )));
         anim.action("holster-pistol-once").setSpeed(4);
         anim.action("sneaking").setSpeed(.7);
         // dying action
-        anim.addAction("die-impact", new BaseAction(Tweens.parallel(
+        anim.addAction("die-impact", new BaseAction(Tweens.sequence(
             anim.action("killed"),
-            Tweens.sequence(
-                Tweens.delay(1),
-                events.tween(prefab.create("startRagdollPhysics"))
-            )
+            Tweens.callMethod(layerControl, "enter", "death", "freeze")
         )));
     }
     

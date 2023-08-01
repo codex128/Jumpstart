@@ -10,16 +10,23 @@ import com.simsilica.es.EntityComponent;
  *
  * @author codex
  */
-public class MoveSpeed implements EntityComponent {
+public class Damage implements EntityComponent {
     
-    private final float speed;
-    
-    public MoveSpeed(float speed) {
-        this.speed = speed;
+    private final float damage;
+
+    public Damage(float damage) {
+        this.damage = damage;
+    }
+
+    public float getDamage() {
+        return damage;
+    }
+
+    @Override
+    public String toString() {
+        return "Damage{" + "damage=" + damage + '}';
     }
     
-    public float getSpeed() {
-        return speed;
-    }
+    
     
 }

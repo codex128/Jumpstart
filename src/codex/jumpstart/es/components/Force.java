@@ -10,22 +10,23 @@ import com.simsilica.es.EntityComponent;
  *
  * @author codex
  */
-public class Visual implements EntityComponent {
+public class Force implements EntityComponent {
     
-    private String request;
-    
-    public Visual() {}
-    public Visual(String request) {
-        this.request = request;
+    private final float force;
+
+    public Force(float force) {
+        this.force = force;
     }
 
-    public String getRequest() {
-        return request;
+    public float getForce() {
+        return force;
     }
-    
+
     @Override
     public String toString() {
-        return "Visual{}";
+        return "Force{" + "force=" + force + '}';
     }
+    
+    
     
 }

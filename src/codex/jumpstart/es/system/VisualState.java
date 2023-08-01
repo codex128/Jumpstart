@@ -5,8 +5,7 @@
 package codex.jumpstart.es.system;
 
 import codex.jumpstart.es.components.Visual;
-import codex.jumpstart.es.factory.Factory;
-import codex.jumpstart.es.factory.FactoryState;
+import codex.jumpstart.es.registry.Registry;
 import com.jme3.app.Application;
 import com.jme3.scene.Spatial;
 import com.jme3.scene.control.Control;
@@ -17,12 +16,12 @@ import com.simsilica.es.EntityId;
  *
  * @author codex
  */
-public class VisualState extends FactoryState<Spatial, Visual> {
+public class VisualState extends Registry<Spatial> {
 
     public static final String USERDATA = "SpatialRegistry(entityId)";
 
-    public VisualState(Factory<Spatial> factory) {
-        super(Visual.class, factory);
+    public VisualState() {
+        super(Visual.class);
     }
     
     @Override
@@ -32,19 +31,16 @@ public class VisualState extends FactoryState<Spatial, Visual> {
     @Override
     protected void onDisable() {}
     @Override
-    public void update(float tpf) {}
-    @Override
-    protected Spatial create(Entity e) {
-        var spatial = super.create(e);
-        if (spatial != null) {
-            assignId(spatial, e.getId());
-            rootNode.attachChild(spatial);
+    public boolean link(EntityId id, Spatial spatial) {
+        if (super.link(id, spatial)) {
+            assignId(spatial, id);
+            return true;
         }
-        return spatial;
+        return false;
     }
     @Override
-    protected Spatial destroy(Entity e) {
-        var spatial = super.destroy(e);
+    public Spatial unlink(EntityId id) {
+        var spatial = super.unlink(id);
         if (spatial != null) {
             assignId(spatial, null);
             spatial.removeFromParent();

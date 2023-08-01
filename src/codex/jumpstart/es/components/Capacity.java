@@ -10,22 +10,23 @@ import com.simsilica.es.EntityComponent;
  *
  * @author codex
  */
-public class Visual implements EntityComponent {
+public class Capacity implements EntityComponent {
     
-    private String request;
-    
-    public Visual() {}
-    public Visual(String request) {
-        this.request = request;
+    private final float capacity;
+
+    public Capacity(float capacity) {
+        this.capacity = capacity;
     }
 
-    public String getRequest() {
-        return request;
+    public float getCapacity() {
+        return capacity;
     }
-    
+
     @Override
     public String toString() {
-        return "Visual{}";
+        return "Capacity{" + "capacity=" + capacity + '}';
     }
+    
+    
     
 }

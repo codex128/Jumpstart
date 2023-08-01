@@ -10,7 +10,7 @@ import com.jme3.math.Vector3f;
  *
  * @author codex
  */
-public interface CharacterMovementListener {
+public interface CharacterWalkListener {
     
     public void walkDirectionChanged(Vector3f oldDir, Vector3f newDir);
     public void moveSpeedChanged(float oldSpeed, float newSpeed, float delta);

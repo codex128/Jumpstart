@@ -10,22 +10,25 @@ import com.simsilica.es.EntityComponent;
  *
  * @author codex
  */
-public class Visual implements EntityComponent {
+public class Firerate implements EntityComponent {
     
-    private String request;
+    private final float rps;
+
+    public Firerate(float rps) {
+        this.rps = rps;
+    }
     
-    public Visual() {}
-    public Visual(String request) {
-        this.request = request;
+    /**
+     * Rounds per second.
+     * @return 
+     */
+    public float getRps() {
+        return rps;
     }
 
-    public String getRequest() {
-        return request;
-    }
-    
     @Override
     public String toString() {
-        return "Visual{}";
+        return "Firerate{" + "rps=" + rps + '}';
     }
     
 }

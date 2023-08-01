@@ -4,56 +4,50 @@
  */
 package codex.jumpstart.es.registry;
 
-import codex.jumpstart.AnimLayerControl;
-import com.jme3.anim.AnimComposer;
-import com.jme3.anim.SkinningControl;
+import codex.jumpstart.es.components.Animation;
+import static codex.jumpstart.es.system.VisualState.assignId;
 import com.jme3.app.Application;
 import com.jme3.scene.Spatial;
 import com.jme3.scene.control.Control;
 import com.simsilica.es.EntityId;
-import com.simsilica.es.EntitySet;
 
 /**
  *
  * @author codex
  */
 public class AnimationRegistry extends Registry<Spatial> {
-    
-    private EntitySet entities;
+
+    public AnimationRegistry() {
+        super(Animation.class);
+    }
     
     @Override
-    protected void init(Application app) {
-        
-    }
-    @Override
-    protected void cleanup(Application app) {
-        super.cleanup();
-        entities.release();
-    }
+    protected void init(Application app) {}
     @Override
     protected void onEnable() {}
     @Override
     protected void onDisable() {}
     @Override
-    public void update(float tpf) {
-        if (entities.applyChanges()) {
-            entities.getRemovedEntities().stream().forEach(e -> unlink(e.getId()));
+    public boolean link(EntityId id, Spatial spatial) {
+        if (super.link(id, spatial)) {
+            assignId(spatial, id);
+            return true;
         }
+        return false;
+    }
+    @Override
+    public Spatial unlink(EntityId id) {
+        var spatial = super.unlink(id);
+        if (spatial != null) {
+            assignId(spatial, null);
+        }
+        return spatial;
     }
     
     public <T extends Control> T getControl(EntityId id, Class<T> type) {
         var spatial = get(id);
         if (spatial == null) return null;
         return spatial.getControl(type);
-    }
-    public AnimComposer getAnimComposer(EntityId id) {
-        return getControl(id, AnimComposer.class);
-    }
-    public SkinningControl getSkinningControl(EntityId id) {
-        return getControl(id, SkinningControl.class);
-    }
-    public AnimLayerControl getLayerControl(EntityId id) {
-        return getControl(id, AnimLayerControl.class);
     }
     
 }

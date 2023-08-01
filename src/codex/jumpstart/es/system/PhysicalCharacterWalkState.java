@@ -4,15 +4,15 @@
  */
 package codex.jumpstart.es.system;
 
-import codex.jumpstart.CharacterMovementControl;
+import codex.jumpstart.CharacterWalkControl;
 import codex.jumpstart.es.ESAppState;
-import codex.jumpstart.es.components.MoveSpeed;
+import codex.jumpstart.es.components.CharacterShape;
+import codex.jumpstart.es.components.WalkSpeed;
 import codex.jumpstart.es.components.ViewDirection;
-import codex.jumpstart.es.components.MoveDirection;
+import codex.jumpstart.es.components.WalkDirection;
 import codex.jumpstart.es.components.Visual;
 import codex.jumpstart.es.registry.Registry;
 import com.jme3.app.Application;
-import com.jme3.bullet.objects.PhysicsCharacter;
 import com.jme3.scene.Spatial;
 import com.simsilica.es.Entity;
 import com.simsilica.es.EntityId;
@@ -22,7 +22,7 @@ import com.simsilica.es.EntitySet;
  *
  * @author codex
  */
-public class PhysicalCharacterMovementState extends ESAppState {
+public class PhysicalCharacterWalkState extends ESAppState {
 
     private EntitySet characters;
     private Registry<Spatial> spatials;
@@ -31,10 +31,10 @@ public class PhysicalCharacterMovementState extends ESAppState {
     protected void init(Application app) {
         characters = ed.getEntities(
                 Visual.class,
-                PhysicsCharacter.class,
-                MoveDirection.class,
+                CharacterShape.class,
+                WalkDirection.class,
                 ViewDirection.class,
-                MoveSpeed.class);
+                WalkSpeed.class);
         spatials = getState(VisualState.class, true);
     }
     @Override
@@ -45,28 +45,40 @@ public class PhysicalCharacterMovementState extends ESAppState {
     protected void onDisable() {}
     @Override
     public void update(float tpf) {
+        refresh(true);
+    }
+    
+    private void refresh(boolean routine) {
         if (characters.applyChanges()) {
+            if (!routine) spatials.refresh();
             for (Entity e : characters.getAddedEntities()) {
-                var movement = new CharacterMovementControl();
+                var movement = new CharacterWalkControl();
                 movement.setFaceWalkDirection(false); // we can use a system for that
                 spatials.get(e.getId()).addControl(movement);
             }
             for (Entity e : characters.getChangedEntities()) {
                 var movement = getMovementControl(e.getId());
-                movement.setWalkDirection(e.get(MoveDirection.class).getDirection());
+                movement.setWalkDirection(e.get(WalkDirection.class).getDirection());
                 movement.setViewDirection(e.get(ViewDirection.class).getDirection());
-                movement.setWalkSpeed(e.get(MoveSpeed.class).getSpeed());
+                movement.setWalkSpeed(e.get(WalkSpeed.class).getSpeed());
             }
             for (Entity e : characters.getRemovedEntities()) {
                 var spatial = spatials.get(e.getId());
                 if (spatial == null) continue;
-                spatial.removeControl(CharacterMovementControl.class);
+                spatial.removeControl(CharacterWalkControl.class);
             }
         }
     }
+    public void refresh() {
+        refresh(false);
+    }
+    public CharacterWalkControl refresh(EntityId fetch) {
+        refresh(false);
+        return getMovementControl(fetch);
+    }
     
-    public CharacterMovementControl getMovementControl(EntityId id) {
-        return spatials.get(id).getControl(CharacterMovementControl.class);
+    public CharacterWalkControl getMovementControl(EntityId id) {
+        return spatials.get(id).getControl(CharacterWalkControl.class);
     }
     
 }

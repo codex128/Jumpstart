@@ -10,22 +10,21 @@ import com.simsilica.es.EntityComponent;
  *
  * @author codex
  */
-public class Visual implements EntityComponent {
+public class LookAtWalk implements EntityComponent {
     
-    private String request;
+    private final boolean yes;
     
-    public Visual() {}
-    public Visual(String request) {
-        this.request = request;
+    public LookAtWalk(boolean yes) {
+        this.yes = yes;
+    }
+    
+    public boolean isYes() {
+        return yes;
     }
 
-    public String getRequest() {
-        return request;
-    }
-    
     @Override
     public String toString() {
-        return "Visual{}";
+        return "LookAtWalk{" + "yes=" + yes + '}';
     }
     
 }

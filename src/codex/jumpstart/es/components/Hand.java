@@ -4,24 +4,26 @@
  */
 package codex.jumpstart.es.components;
 
-import com.jme3.math.Vector3f;
 import com.simsilica.es.EntityComponent;
+import com.simsilica.es.EntityId;
 
 /**
  *
  * @author codex
  */
-public class MoveDirection implements EntityComponent {
+public class Hand implements EntityComponent {
     
-    private final Vector3f direction = new Vector3f(0f, 0f, 1f);
+    private final EntityId hold;
     
-    public MoveDirection() {}
-    public MoveDirection(Vector3f direction) {
-        this.direction.set(direction);
+    public Hand() {
+        this(null);
     }
-    
-    public Vector3f getDirection() {
-        return direction;
+    public Hand(EntityId hold) {
+        this.hold = hold;
+    }
+
+    public EntityId getHeldEntity() {
+        return hold;
     }
     
 }

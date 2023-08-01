@@ -10,22 +10,21 @@ import com.simsilica.es.EntityComponent;
  *
  * @author codex
  */
-public class Visual implements EntityComponent {
+public class Name implements EntityComponent {
     
-    private String request;
-    
-    public Visual() {}
-    public Visual(String request) {
-        this.request = request;
+    private final String name;
+
+    public Name(String name) {
+        this.name = name;
     }
 
-    public String getRequest() {
-        return request;
+    public String getName() {
+        return name;
     }
-    
+
     @Override
     public String toString() {
-        return "Visual{}";
+        return "Name{" + "name=" + name + '}';
     }
     
 }

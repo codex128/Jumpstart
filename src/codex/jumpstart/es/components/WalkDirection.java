@@ -4,28 +4,24 @@
  */
 package codex.jumpstart.es.components;
 
+import com.jme3.math.Vector3f;
 import com.simsilica.es.EntityComponent;
 
 /**
  *
  * @author codex
  */
-public class Visual implements EntityComponent {
+public class WalkDirection implements EntityComponent {
     
-    private String request;
+    private final Vector3f direction = new Vector3f(0f, 0f, 1f);
     
-    public Visual() {}
-    public Visual(String request) {
-        this.request = request;
-    }
-
-    public String getRequest() {
-        return request;
+    public WalkDirection() {}
+    public WalkDirection(Vector3f direction) {
+        this.direction.set(direction);
     }
     
-    @Override
-    public String toString() {
-        return "Visual{}";
+    public Vector3f getDirection() {
+        return direction;
     }
     
 }
