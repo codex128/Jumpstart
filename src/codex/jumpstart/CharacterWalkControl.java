@@ -19,8 +19,8 @@ import java.util.LinkedList;
  *
  * @author codex
  */
-public class CharacterMovementControl extends SubControl<BetterCharacterControl>
-        implements Listenable<CharacterMovementListener> {
+public class CharacterWalkControl extends SubControl<BetterCharacterControl>
+        implements Listenable<CharacterWalkListener> {
     
     private final Vector3f walk = new Vector3f(0f, 0f, 1f);
     private final Vector3f view = new Vector3f(0f, 0f, 1f);
@@ -29,13 +29,13 @@ public class CharacterMovementControl extends SubControl<BetterCharacterControl>
     private Vector2f friction = new Vector2f(1, 0);
     private boolean faceWalkDir = false;
     private boolean autoFriction = true;
-    private final LinkedList<CharacterMovementListener> listeners = new LinkedList<>();
+    private final LinkedList<CharacterWalkListener> listeners = new LinkedList<>();
     
-    public CharacterMovementControl(Class<BetterCharacterControl> type) {
-        super(type);
+    public CharacterWalkControl() {
+        super(BetterCharacterControl.class);
     }
-    public CharacterMovementControl(Class<BetterCharacterControl> type, boolean persistant) {
-        super(type, persistant);
+    public CharacterWalkControl(boolean persistant) {
+        super(BetterCharacterControl.class, persistant);
     }    
 
     @Override
@@ -68,7 +68,7 @@ public class CharacterMovementControl extends SubControl<BetterCharacterControl>
     @Override
     protected void onDependencyReleased() {}
     @Override
-    public Collection<CharacterMovementListener> getListeners() {
+    public Collection<CharacterWalkListener> getListeners() {
         return listeners;
     }
     

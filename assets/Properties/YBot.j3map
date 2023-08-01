@@ -1,6 +1,10 @@
-name: "YBot";
+//name: "YBot";
 model: "Models/characters/YBot.j3o";
+scale: .01f;
+cullHint: "Never";
+shadowMode: "Cast";
 radius: .25f;
 height: 2f;
 mass: 175f;
 jumpForce: 3500f;
+faceWalkDirection: true;

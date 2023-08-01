@@ -5,8 +5,16 @@ import codex.j3map.processors.BooleanProcessor;
 import codex.j3map.processors.FloatProcessor;
 import codex.j3map.processors.IntegerProcessor;
 import codex.j3map.processors.StringProcessor;
+import codex.jumpstart.es.EntityAppState;
+import codex.jumpstart.es.registry.AnimationRegistry;
+import codex.jumpstart.es.registry.PhysicsRegistry;
+import codex.jumpstart.es.system.PhysicalCharacterState;
+import codex.jumpstart.es.system.PhysicalCharacterWalkState;
+import codex.jumpstart.es.system.RigidBodyState;
+import codex.jumpstart.es.system.SpeedLimitState;
+import codex.jumpstart.es.system.ViewMatchWalkState;
+import codex.jumpstart.es.system.VisualState;
 import com.jme3.app.SimpleApplication;
-import com.jme3.asset.plugins.FileLocator;
 import com.jme3.bullet.BulletAppState;
 import com.jme3.environment.EnvironmentCamera;
 import com.jme3.renderer.RenderManager;
@@ -49,14 +57,25 @@ public class Main extends SimpleApplication {
         
         bulletapp = new BulletAppState();
         bulletapp.setDebugViewPorts(viewPort);
-        //bulletapp.setDebugEnabled(true);
+        bulletapp.setDebugEnabled(true);
         stateManager.attach(bulletapp);
         
-        var envCam = new EnvironmentCamera();
-        stateManager.attach(envCam);
+        stateManager.attach(new EntityAppState());
+        stateManager.attach(new VisualState());
+        stateManager.attach(new PhysicsRegistry());
+        stateManager.attach(new AnimationRegistry());
+        stateManager.attach(new PhysicalCharacterState());
+        stateManager.attach(new PhysicalCharacterWalkState());
+        stateManager.attach(new RigidBodyState());
+        stateManager.attach(new SpeedLimitState());
+        stateManager.attach(new ViewMatchWalkState());
         
-        var game = new GameState();
-        stateManager.attach(game);
+        stateManager.attach(new EnvironmentCamera());
+        
+        stateManager.attach(new ESGameState());
+        
+        //var game = new GameState();
+        //stateManager.attach(game);
         
     }
     @Override

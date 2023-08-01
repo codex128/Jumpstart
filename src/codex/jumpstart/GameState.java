@@ -12,11 +12,7 @@ import codex.boost.scene.SceneGraphIterator;
 import codex.j3map.J3map;
 import com.jme3.anim.AnimComposer;
 import com.jme3.anim.SkinningControl;
-import com.jme3.anim.tween.Tweens;
-import com.jme3.anim.tween.action.BaseAction;
 import com.jme3.anim.tween.action.BlendAction;
-import com.jme3.anim.tween.action.ClipAction;
-import com.jme3.anim.tween.action.LinearBlendSpace;
 import com.jme3.app.Application;
 import com.jme3.bullet.BulletAppState;
 import com.jme3.bullet.PhysicsSpace;
@@ -24,14 +20,13 @@ import com.jme3.bullet.PhysicsTickListener;
 import com.jme3.bullet.animation.DacConfiguration;
 import com.jme3.bullet.animation.DynamicAnimControl;
 import com.jme3.bullet.animation.RangeOfMotion;
-import com.jme3.bullet.control.BetterCharacterControl;
 import com.jme3.bullet.control.RigidBodyControl;
 import com.jme3.environment.EnvironmentCamera;
 import com.jme3.environment.LightProbeFactory;
 import com.jme3.environment.generation.JobProgressAdapter;
 import com.jme3.light.AmbientLight;
-import com.jme3.light.DirectionalLight;
 import com.jme3.light.LightProbe;
+import com.jme3.light.PointLight;
 import com.jme3.math.ColorRGBA;
 import com.jme3.math.FastMath;
 import com.jme3.math.Quaternion;
@@ -41,7 +36,7 @@ import com.jme3.scene.Geometry;
 import com.jme3.scene.Node;
 import com.jme3.scene.Spatial;
 import com.jme3.scene.control.Control;
-import com.jme3.shadow.DirectionalLightShadowRenderer;
+import com.jme3.shadow.PointLightShadowRenderer;
 import com.jme3.util.SkyFactory;
 import com.simsilica.lemur.GuiGlobals;
 import com.simsilica.lemur.input.AnalogFunctionListener;
@@ -57,13 +52,13 @@ import jme3utilities.sky.Updater;
  * @author codex
  */
 public class GameState extends GameAppState implements
-        AnalogFunctionListener, StateFunctionListener, CharacterMovementListener {
+        AnalogFunctionListener, StateFunctionListener, CharacterWalkListener {
     
     private Node scene;
     private AnimComposer anim;
     private SkinningControl skin;
     private AnimLayerControl layerControl;
-    private CharacterMovementControl movement;
+    private CharacterWalkControl movement;
     private MyCharacterControl control;
     private OrbitalCamera orbital;
     private ShoulderCamera shoulder;
@@ -288,7 +283,7 @@ public class GameState extends GameAppState implements
         ybot.addControl(control);
         getPhysicsSpace().add(control);
         control.getRigidBody().setCcdMotionThreshold(0f);
-        movement = new CharacterMovementControl(BetterCharacterControl.class);
+        movement = new CharacterWalkControl();
         movement.setFaceWalkDirection(true);
         movement.addListener(this);
         ybot.addControl(movement);
@@ -300,12 +295,18 @@ public class GameState extends GameAppState implements
     private void initIllumination() {
         var gi = new AmbientLight(ColorRGBA.DarkGray);
         scene.addLight(gi);
-        var sun = new DirectionalLight(new Vector3f(0f, -1f, 0f));
-        sun.setColor(ColorRGBA.White);
-        scene.addLight(sun);
-        var dlsr = new DirectionalLightShadowRenderer(assetManager, 4096, 4);
-        dlsr.setLight(sun);
-        app.getViewPort().addProcessor(dlsr);
+//        var sun = new DirectionalLight(new Vector3f(0f, -1f, 0f));
+//        sun.setColor(ColorRGBA.White);
+//        scene.addLight(sun);
+//        var dlsr = new DirectionalLightShadowRenderer(assetManager, 4096, 1);
+//        dlsr.setLight(sun);
+//        app.getViewPort().addProcessor(dlsr);
+        var point = new PointLight(new Vector3f(0f, 5f, 0f));
+        point.setRadius(30f);
+        scene.addLight(point);
+        var plsr = new PointLightShadowRenderer(assetManager, 4096);
+        plsr.setLight(point);
+        app.getViewPort().addProcessor(plsr);
         var envCam = getState(EnvironmentCamera.class, true);
         envCam.setPosition(new Vector3f(0f, 20f, 0f));
         envCam.setBackGroundColor(ColorRGBA.White);
@@ -327,8 +328,8 @@ public class GameState extends GameAppState implements
         skyControl.getSunAndStars().setHour(10);
         Updater updater = skyControl.getUpdater();
         updater.setAmbientLight(gi);
-        updater.setMainLight(sun);
-        updater.addShadowRenderer(dlsr);
+        //updater.setMainLight(sun);
+        //updater.addShadowRenderer(dlsr);
         skyControl.setEnabled(true);
     }
     private void initCamera(Spatial ybot) {
@@ -347,87 +348,10 @@ public class GameState extends GameAppState implements
     }
     private void initAnimations() {
         skin = anim.getSpatial().getControl(SkinningControl.class);
-        layerControl = new AnimLayerControl(AnimComposer.class);
+        layerControl = new AnimLayerControl();
         anim.getSpatial().addControl(layerControl);
-        AlertArmatureMask allJoints = AlertArmatureMask.all("idle", anim, skin);
-        layerControl.createSet(anim, skin, mask -> mask.addAll(),
-                "idle", "move", "gun", "jump", "death");
-        layerControl.create("idle", allJoints);
-        anim.addAction("freeze", new BaseAction(anim.action("idle")));
-        anim.action("freeze").setSpeed(0);
-        var idle = (ClipAction)anim.action("idle");
-        idle.setMaxTransitionWeight(.5);
-        layerControl.enter("idle", "idle");
-        var walkRun = anim.actionBlended("walk->run", new LinearBlendSpace(0f, 1f), "walk", "sprint");
-        walkRun.setMaxTransitionWeight(.5);
-        anim.actionSequence("land-once",
-            anim.action("landing"),
-            Tweens.callMethod(layerControl, "exit", "jump")
-        );
-        ((ClipAction)anim.action("aim-pistol")).setMaxTransitionWeight(.8);
-        ((ClipAction)anim.action("shoot-pistol")).setMaxTransitionWeight(.9);
-        anim.addAction("shoot-cycle", new BaseAction(Tweens.sequence(
-            Tweens.loopDuration(.2f, anim.action("aim-pistol")),
-            Tweens.parallel(
-                anim.action("shoot-pistol"),
-                Tweens.sequence(
-                    Tweens.delay(.1),
-                    Tweens.callMethod(this, "playGunShot")
-                )
-            )
-        )));
-        anim.action("shoot-cycle").setSpeed(2);
-        ((ClipAction)anim.action("draw-pistol")).setMaxTransitionWeight(.7);
-        anim.addAction("draw-pistol-once", new BaseAction(Tweens.parallel(
-            Tweens.sequence(
-                anim.action("draw-pistol"),
-                Tweens.callMethod(this, "enableAimShifting", true),
-                Tweens.callMethod(this, "switchCameraModes"),
-                Tweens.callMethod(layerControl, "enter", "gun", "shoot-cycle")
-            ),
-            Tweens.sequence(
-                Tweens.delay(.5f),
-                Tweens.callMethod(this, "putGunInHand")
-            )
-        )));
-        anim.action("draw-pistol-once").setSpeed(4);
-        anim.addAction("holster-pistol-once", new BaseAction(Tweens.parallel(
-            Tweens.sequence(
-                Tweens.invert(anim.action("draw-pistol")),
-                Tweens.callMethod(layerControl, "exit", "gun")
-            ),
-            Tweens.sequence(
-                Tweens.delay(1.5f),
-                Tweens.callMethod(this, "putGunInHolster")
-            )
-        )));
-        anim.action("holster-pistol-once").setSpeed(4);
-        anim.action("sneaking").setSpeed(.7);
-        anim.addAction("die-impact", new BaseAction(Tweens.parallel(
-            anim.action("killed"),
-            Tweens.sequence(
-                Tweens.delay(1),
-                Tweens.callMethod(this, "startRagdollPhysics")
-            )
-        )));
-        
-        // theoretical animation setup
-        /*anim.addAction("hi-jump-once", new BaseAction(
-            Tweens.sequence(
-                Tweens.parallel(
-                    anim.action("jump"),
-                    Tweens.sequence(
-                        Tweens.delay(.1f),
-                        Tweens.callMethod(control, "jump")
-                    )
-                ),
-                Tweens.callMethod(layerControl, "enter", "jump", "jump-loop")
-            )
-        ));
-        anim.actionSequence("long-jump-once",
-            anim.action("running-jump"),
-            Tweens.callMethod(layerControl, "enter", "jump", "jump-loop")
-        );*/
+        // WARNING: must configure animations!
+        //AnimationConfig.conf(this, anim.getSpatial());
     }
     private void initAudio() {
         var model = new AudioModel((J3map)assetManager.loadAsset("Properties/gunShot.j3map"));
@@ -474,10 +398,6 @@ public class GameState extends GameAppState implements
             if (control != null) return control;
         }
         return null;
-    }
-    private float ofGreaterMagnitude(float a, float b) {
-        if (FastMath.abs(a) >= FastMath.abs(b)) return a;
-        return b;
     }
     
     public void switchCameraModes() {
