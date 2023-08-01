@@ -4,11 +4,12 @@
  */
 package codex.jumpstart;
 
-import codex.jumpstart.es.AnimationConfig;
-import codex.jumpstart.es.registry.AnimationRegistry;
 import codex.jumpstart.es.ESAppState;
+import codex.jumpstart.es.components.Animation;
+import codex.jumpstart.es.components.Visual;
+import codex.jumpstart.es.factory.FactoryRequest;
+import codex.jumpstart.es.registry.AnimationRegistry;
 import codex.jumpstart.es.system.VisualState;
-import codex.jumpstart.es.components.Member;
 import codex.jumpstart.event.AnimEventState;
 import com.jme3.app.Application;
 import com.jme3.scene.Spatial;
@@ -26,12 +27,18 @@ public class ESGameState extends ESAppState {
         // create player entity
         EntityId player = ed.createEntity();
         ed.setComponents(player,
-                new Member(VisualState.class, AnimationRegistry.class));
-        Spatial ybot = assetManager.loadModel("Models/characters/YBot.j3o");
-        getState(VisualState.class, true).link(player, ybot);
-        Spatial animated = AnimationConfig.getAnimatedSpatial(ybot);
-        AnimationConfig.configurePlayerAnimations(player, animated, getState(AnimEventState.class, true));
-        getState(AnimationRegistry.class, true).link(player, animated);
+                new Visual(FactoryRequest.CUSTOM),
+                new Animation());
+        // model
+        var spatial = assetManager.loadModel("Models/characters/YBot.j3o");  
+        spatial.setLocalScale(.01f);
+        spatial.setCullHint(Spatial.CullHint.Never); // since this spatial will presumably always be in focus
+        // animation
+        var animated = AnimationConfig.fetchAnimatedSpatial(spatial);
+        AnimationConfig.configurePlayerAnimations(player, animated, getState(AnimEventState.class));
+        // registering
+        getState(VisualState.class).link(player, spatial);
+        getState(AnimationRegistry.class).link(player, animated);
         
     }
     @Override

@@ -13,8 +13,11 @@ import com.simsilica.es.EntityComponent;
 public interface FactoryRequest extends EntityComponent {
     
     /**
-     * Requests only the barest so that another system
-     * can easily build whatever it needs on it.
+     * Requests the default.
+     */
+    public static final String DEFAULT = "FactoryRequest:default";
+    /**
+     * Requests that no manufacturing be done.
      */
     public static final String CUSTOM = "FactoryRequest:custom";
     

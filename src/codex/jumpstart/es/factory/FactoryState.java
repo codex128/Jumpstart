@@ -23,8 +23,9 @@ public abstract class FactoryState <T, R extends FactoryRequest> extends Registr
     protected EntitySet entities;
     protected Factory<T> factory;
     
-    public FactoryState(Class<R> requestType) {
+    public FactoryState(Class<R> requestType, Factory<T> factory) {
         this.requestType = requestType;
+        this.factory = factory;
     }
     
     @Override
@@ -34,6 +35,7 @@ public abstract class FactoryState <T, R extends FactoryRequest> extends Registr
     }
     @Override
     protected void cleanup(Application app) {
+        super.cleanup();
         entities.release();
     }
     @Override
@@ -42,18 +44,27 @@ public abstract class FactoryState <T, R extends FactoryRequest> extends Registr
     protected void onDisable() {}
     @Override
     public void update(float tpf) {
-        if (entities.applyChanges()) {
-            entities.getAddedEntities().stream().forEach(e -> create(e));
-            entities.getRemovedEntities().stream().forEach(e -> destroy(e));
-        }
+        refresh();
     }
     
     protected T create(Entity e) {
-        var object = factory.manufacture(getRequestComponent(e).getRequest());
+        var object = factory.manufacture(getRequestComponent(e).getRequest(), e);
         return link(e.getId(), object) ? object : null;
     }
     protected T destroy(Entity e) {
         return unlink(e.getId());
+    }
+    @Override
+    public T get(EntityId id) {
+        refresh();
+        return super.get(id);
+    }
+    
+    public void refresh() {
+        if (entities.applyChanges()) {
+            entities.getAddedEntities().stream().forEach(e -> create(e));
+            entities.getRemovedEntities().stream().forEach(e -> destroy(e));
+        }
     }
     
     protected R getRequestComponent(Entity e) {

@@ -4,13 +4,15 @@
  */
 package codex.jumpstart.es.factory;
 
+import com.simsilica.es.Entity;
+
 /**
  *
  * @author codex
  * @param <T>
  */
-public interface AssemblyLine <T> {
+public interface Assembler <T> {
     
-    public T assemble();
+    public T assemble(Entity entity);
     
 }

@@ -5,6 +5,7 @@
 package codex.jumpstart.es.system;
 
 import codex.jumpstart.es.components.Visual;
+import codex.jumpstart.es.factory.Factory;
 import codex.jumpstart.es.factory.FactoryState;
 import com.jme3.app.Application;
 import com.jme3.scene.Spatial;
@@ -20,14 +21,12 @@ public class VisualState extends FactoryState<Spatial, Visual> {
 
     public static final String USERDATA = "SpatialRegistry(entityId)";
 
-    public VisualState() {
-        super(Visual.class);
+    public VisualState(Factory<Spatial> factory) {
+        super(Visual.class, factory);
     }
     
     @Override
     protected void init(Application app) {}
-    @Override
-    protected void cleanup(Application app) {}
     @Override
     protected void onEnable() {}
     @Override

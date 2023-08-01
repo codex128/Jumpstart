@@ -4,6 +4,8 @@
  */
 package codex.jumpstart.es.factory;
 
+import com.simsilica.es.Entity;
+
 /**
  *
  * @author codex
@@ -11,6 +13,6 @@ package codex.jumpstart.es.factory;
  */
 public interface Factory <T> {
     
-    public T manufacture(String request);
+    public T manufacture(String request, Entity entity);
     
 }

@@ -5,6 +5,7 @@
 package codex.jumpstart.es.registry;
 
 import codex.jumpstart.es.ESAppState;
+import com.jme3.app.Application;
 import com.simsilica.es.EntityId;
 import java.util.HashMap;
 
@@ -16,6 +17,11 @@ import java.util.HashMap;
 public abstract class Registry <T> extends ESAppState {
     
     protected final HashMap<EntityId, T> registry = new HashMap<>();
+    
+    @Override
+    protected void cleanup(Application app) {
+        registry.clear();
+    }
     
     public boolean link(EntityId entity, T object) {
         return registry.putIfAbsent(entity, object) == null;

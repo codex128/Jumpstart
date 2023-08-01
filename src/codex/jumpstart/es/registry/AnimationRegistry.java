@@ -4,7 +4,6 @@
  */
 package codex.jumpstart.es.registry;
 
-import codex.jumpstart.es.system.VisualState;
 import codex.jumpstart.AnimLayerControl;
 import com.jme3.anim.AnimComposer;
 import com.jme3.anim.SkinningControl;
@@ -12,57 +11,38 @@ import com.jme3.app.Application;
 import com.jme3.scene.Spatial;
 import com.jme3.scene.control.Control;
 import com.simsilica.es.EntityId;
-import java.util.HashMap;
+import com.simsilica.es.EntitySet;
 
 /**
  *
  * @author codex
  */
 public class AnimationRegistry extends Registry<Spatial> {
-
-    private HashMap<EntityId, Spatial> animations = new HashMap<>();
+    
+    private EntitySet entities;
     
     @Override
-    protected void init(Application app) {}
+    protected void init(Application app) {
+        
+    }
     @Override
     protected void cleanup(Application app) {
-        animations.clear();
+        super.cleanup();
+        entities.release();
     }
     @Override
     protected void onEnable() {}
     @Override
     protected void onDisable() {}
     @Override
-    public void update(float tpf) {}    
-    @Override
-    public boolean link(EntityId entity, Spatial object) {
-        if (object.getControl(AnimComposer.class) == null) {
-            throw new NullPointerException("Spatial must have an AnimComposer!");
+    public void update(float tpf) {
+        if (entities.applyChanges()) {
+            entities.getRemovedEntities().stream().forEach(e -> unlink(e.getId()));
         }
-        if (animations.putIfAbsent(entity, object) != null) {
-            return false;
-        }
-        VisualState.assignId(object, entity);
-        return true;
-    }
-    @Override
-    public Spatial unlink(EntityId entity) {
-        var spatial = animations.remove(entity);
-        if (spatial != null) {
-            VisualState.assignId(spatial, null);
-        }
-        return spatial;
-    }
-    @Override
-    public Spatial get(EntityId entity) {
-        return animations.get(entity);
     }
     
-    public Spatial getAnimatedSpatial(EntityId id) {
-        return animations.get(id);
-    }
     public <T extends Control> T getControl(EntityId id, Class<T> type) {
-        var spatial = getAnimatedSpatial(id);
+        var spatial = get(id);
         if (spatial == null) return null;
         return spatial.getControl(type);
     }

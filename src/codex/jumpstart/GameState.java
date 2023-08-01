@@ -350,7 +350,8 @@ public class GameState extends GameAppState implements
         skin = anim.getSpatial().getControl(SkinningControl.class);
         layerControl = new AnimLayerControl();
         anim.getSpatial().addControl(layerControl);
-        AnimationFabricator.fabricate(this, anim.getSpatial());
+        // WARNING: must configure animations!
+        //AnimationConfig.conf(this, anim.getSpatial());
     }
     private void initAudio() {
         var model = new AudioModel((J3map)assetManager.loadAsset("Properties/gunShot.j3map"));

@@ -5,15 +5,22 @@ import codex.j3map.processors.BooleanProcessor;
 import codex.j3map.processors.FloatProcessor;
 import codex.j3map.processors.IntegerProcessor;
 import codex.j3map.processors.StringProcessor;
-import codex.jumpstart.es.registry.AnimationRegistry;
 import codex.jumpstart.es.EntityAppState;
-import codex.jumpstart.es.registry.PhysicsRegistry;
+import codex.jumpstart.es.factory.AssemblyFactory;
+import codex.jumpstart.es.factory.FactoryRequest;
 import codex.jumpstart.es.system.VisualState;
+import codex.jumpstart.event.AnimEventState;
 import com.jme3.app.SimpleApplication;
 import com.jme3.bullet.BulletAppState;
 import com.jme3.environment.EnvironmentCamera;
+import com.jme3.material.Material;
 import com.jme3.renderer.RenderManager;
+import com.jme3.scene.Geometry;
+import com.jme3.scene.Node;
+import com.jme3.scene.Spatial;
+import com.jme3.scene.shape.Box;
 import com.jme3.system.AppSettings;
+import com.simsilica.es.EntityId;
 import com.simsilica.lemur.GuiGlobals;
 
 /**
@@ -55,10 +62,24 @@ public class Main extends SimpleApplication {
         //bulletapp.setDebugEnabled(true);
         stateManager.attach(bulletapp);
         
-        stateManager.attachAll(new EntityAppState(),
-                new VisualState(),
-                new PhysicsRegistry(),
-                new AnimationRegistry());
+        stateManager.attach(new EntityAppState());
+        
+        stateManager.attach(new AnimEventState());
+        
+        var modelFactory = new AssemblyFactory<Spatial>();
+        modelFactory.add(FactoryRequest.DEFAULT, (entity) -> {
+            var cube = new Geometry("default-cube", new Box(.5f, .5f, .5f));
+            var mat = new Material(assetManager, "Common/MatDefs/Light/Lighting.j3md");
+            mat.setTexture("DiffuseMap", assetManager.loadTexture("Textures/testgrid.png"));
+            cube.setMaterial(mat);
+            return cube;
+        });
+        modelFactory.add(FactoryRequest.CUSTOM, (entity) -> new Node());
+        var visuals = new VisualState(modelFactory);
+        stateManager.attach(visuals);
+        
+        var animFactory = new AssemblyFactory<Spatial>();
+        animFactory.add("player", (entity) -> AnimationConfig.configurePlayerAnimations(entity, guiNode, events))
         
         var envCam = new EnvironmentCamera();
         stateManager.attach(envCam);

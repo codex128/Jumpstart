@@ -1,9 +1,13 @@
 /*
  * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
+ * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Interface.java to edit this template
  */
 package codex.jumpstart;
 
+import codex.boost.scene.SceneGraphIterator;
+import codex.jumpstart.AnimLayerControl;
+import codex.jumpstart.event.AnimEventListener;
+import codex.jumpstart.event.AnimationEvent;
 import com.jme3.anim.AnimComposer;
 import com.jme3.anim.SkinningControl;
 import com.jme3.anim.tween.Tweens;
@@ -11,31 +15,41 @@ import com.jme3.anim.tween.action.BaseAction;
 import com.jme3.anim.tween.action.ClipAction;
 import com.jme3.anim.tween.action.LinearBlendSpace;
 import com.jme3.scene.Spatial;
+import com.jme3.scene.control.Control;
+import com.simsilica.es.EntityId;
 
 /**
  *
  * @author codex
  */
-public class AnimationFabricator {
+public class AnimationConfig {
     
-    public static void fabricate(Object user, Spatial spatial) {
-        var anim = spatial.getControl(AnimComposer.class);
-        var skin = spatial.getControl(SkinningControl.class);
-        var layerControl = spatial.getControl(AnimLayerControl.class);
+    public static void configurePlayerAnimations(EntityId entity, Spatial animated, AnimEventListener events) {
+        // get animation fields
+        var anim = getControl(animated, AnimComposer.class);
+        var skin = getControl(animated, SkinningControl.class);
+        var layerControl = new AnimLayerControl();
+        animated.addControl(layerControl);
+        var prefab = AnimationEvent.createPrefab(entity, anim);
+        // configure animation layers
         layerControl.createSet(anim, skin, mask -> mask.addAll(),
                 "idle", "move", "gun", "jump", "death");
-        //layerControl.create("idle", allJoints);
+        // freeze action
         anim.addAction("freeze", new BaseAction(anim.action("idle")));
         anim.action("freeze").setSpeed(0);
+        // idle action
         var idle = (ClipAction)anim.action("idle");
         idle.setMaxTransitionWeight(.5);
         layerControl.enter("idle", "idle");
+        // walk/run action
         var walkRun = anim.actionBlended("walk->run", new LinearBlendSpace(0f, 1f), "walk", "sprint");
         walkRun.setMaxTransitionWeight(.5);
+        // landing action
         anim.actionSequence("land-once",
             anim.action("landing"),
             Tweens.callMethod(layerControl, "exit", "jump")
         );
+        // aiming and shooting actions
         ((ClipAction)anim.action("aim-pistol")).setMaxTransitionWeight(.8);
         ((ClipAction)anim.action("shoot-pistol")).setMaxTransitionWeight(.9);
         anim.addAction("shoot-cycle", new BaseAction(Tweens.sequence(
@@ -44,7 +58,7 @@ public class AnimationFabricator {
                 anim.action("shoot-pistol"),
                 Tweens.sequence(
                     Tweens.delay(.1),
-                    Tweens.callMethod(user, "playGunShot")
+                    events.tween(prefab.create("playGunShot"))
                 )
             )
         )));
@@ -53,13 +67,13 @@ public class AnimationFabricator {
         anim.addAction("draw-pistol-once", new BaseAction(Tweens.parallel(
             Tweens.sequence(
                 anim.action("draw-pistol"),
-                Tweens.callMethod(user, "enableAimShifting", true),
-                Tweens.callMethod(user, "switchCameraModes"),
+                events.tween(prefab.create("enableAimShifting")),
+                events.tween(prefab.create("switchCameraModes")),
                 Tweens.callMethod(layerControl, "enter", "gun", "shoot-cycle")
             ),
             Tweens.sequence(
                 Tweens.delay(.5f),
-                Tweens.callMethod(user, "putGunInHand")
+                events.tween(prefab.create("putGunInHand"))
             )
         )));
         anim.action("draw-pistol-once").setSpeed(4);
@@ -70,21 +84,35 @@ public class AnimationFabricator {
             ),
             Tweens.sequence(
                 Tweens.delay(1.5f),
-                Tweens.callMethod(user, "putGunInHolster")
+                events.tween(prefab.create("putGunInHolster"))
             )
         )));
         anim.action("holster-pistol-once").setSpeed(4);
         anim.action("sneaking").setSpeed(.7);
+        // dying action
         anim.addAction("die-impact", new BaseAction(Tweens.parallel(
             anim.action("killed"),
             Tweens.sequence(
                 Tweens.delay(1),
-                Tweens.callMethod(user, "startRagdollPhysics")
+                events.tween(prefab.create("startRagdollPhysics"))
             )
         )));
     }
-    public static void fabricateIdle(Object user, Spatial spatial) {
-        
+    
+    public static <T extends Control> T getControl(Spatial spatial, Class<T> type) {
+        var control = spatial.getControl(type);
+        if (control == null) {
+            throw new NullPointerException("Spatial does not have "+type.getSimpleName()+"!");
+        }
+        return control;
+    }
+    public static Spatial fetchAnimatedSpatial(Spatial root) {
+        for (Spatial spatial : new SceneGraphIterator(root)) {
+            if (spatial.getControl(AnimComposer.class) != null) {
+                return spatial;
+            }
+        }
+        return null;
     }
     
 }
