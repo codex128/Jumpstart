@@ -22,7 +22,6 @@ import com.jme3.math.FastMath;
 import com.jme3.math.Quaternion;
 import com.jme3.math.Vector3f;
 import com.jme3.scene.Node;
-import com.jme3.scene.Spatial;
 import com.simsilica.es.EntityComponent;
 import com.simsilica.es.EntityId;
 import com.simsilica.lemur.GuiGlobals;
@@ -136,14 +135,14 @@ public class SinglePlayerState extends ESAppState implements AnimEventListener,
                 currentDir.nlerp(desiredDir, .1f);
                 set(new WalkDirection(currentDir.mult(Vector3f.UNIT_Z)));
             }
-            set(new WalkSpeed(Math.max(FastMath.abs(inputdirection.z), FastMath.abs(inputdirection.x))*1f));
+            set(new WalkSpeed(Math.max(FastMath.abs(inputdirection.z), FastMath.abs(inputdirection.x))*getWalkSpeed()));
         }
         else if (aimShifting) {
             if (inputdirection.z != 0 || inputdirection.x != 0) {
                 Quaternion rotation = new Quaternion().lookAt(get(ViewDirection.class).getDirection(), Vector3f.UNIT_Y);
                 set(new WalkDirection(rotation.getRotationColumn(2).multLocal(inputdirection.z).addLocal(rotation.getRotationColumn(0).multLocal(-inputdirection.x)).normalizeLocal()));
             }
-            set(new WalkSpeed(Math.max(FastMath.abs(inputdirection.z), FastMath.abs(inputdirection.x))*1f));
+            set(new WalkSpeed(Math.max(FastMath.abs(inputdirection.z), FastMath.abs(inputdirection.x))*getWalkSpeed()));
         }
         if (shoulder.isEnabled()) {
             shoulder.setSubjectTranslation(control.getRigidBody().getPhysicsLocation());
@@ -280,6 +279,10 @@ public class SinglePlayerState extends ESAppState implements AnimEventListener,
     }
     private void set(EntityComponent component) {
         ed.setComponent(player, component);
+    }
+    
+    private float getWalkSpeed() {
+        return FastMath.interpolateLinear(speedfactor, 2f, 10f);
     }
     private boolean isAlive() {
         return !layerControl.isActive("death");

@@ -57,7 +57,7 @@ public class Main extends SimpleApplication {
         
         bulletapp = new BulletAppState();
         bulletapp.setDebugViewPorts(viewPort);
-        bulletapp.setDebugEnabled(true);
+        //bulletapp.setDebugEnabled(true);
         stateManager.attach(bulletapp);
         
         stateManager.attach(new EntityAppState());
