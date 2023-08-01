@@ -136,14 +136,14 @@ public class SinglePlayerState extends ESAppState implements AnimEventListener,
                 currentDir.nlerp(desiredDir, .1f);
                 set(new WalkDirection(currentDir.mult(Vector3f.UNIT_Z)));
             }
-            set(new WalkSpeed(Math.max(FastMath.abs(inputdirection.z), FastMath.abs(inputdirection.x))*get(WalkSpeed.class).getSpeed()));
+            set(new WalkSpeed(Math.max(FastMath.abs(inputdirection.z), FastMath.abs(inputdirection.x))*1f));
         }
         else if (aimShifting) {
             if (inputdirection.z != 0 || inputdirection.x != 0) {
                 Quaternion rotation = new Quaternion().lookAt(get(ViewDirection.class).getDirection(), Vector3f.UNIT_Y);
                 set(new WalkDirection(rotation.getRotationColumn(2).multLocal(inputdirection.z).addLocal(rotation.getRotationColumn(0).multLocal(-inputdirection.x)).normalizeLocal()));
             }
-            set(new WalkSpeed(Math.max(FastMath.abs(inputdirection.z), FastMath.abs(inputdirection.x))*get(WalkSpeed.class).getSpeed()));
+            set(new WalkSpeed(Math.max(FastMath.abs(inputdirection.z), FastMath.abs(inputdirection.x))*1f));
         }
         if (shoulder.isEnabled()) {
             shoulder.setSubjectTranslation(control.getRigidBody().getPhysicsLocation());

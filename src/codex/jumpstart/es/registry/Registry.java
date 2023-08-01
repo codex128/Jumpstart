@@ -37,7 +37,7 @@ public abstract class Registry <T> extends ESAppState {
     }
     @Override
     protected void cleanup(Application app) {
-        entities.release();
+        if (entities != null) entities.release();
         registry.clear();
     }
     @Override

@@ -75,7 +75,31 @@ public class ESGameState extends ESAppState {
             if (spatial.getName().equals("start")) {
                 startLocation.set(spatial.getWorldTranslation());
             }
-        }
+        }        
+        
+        // create player entity
+        EntityId player = ed.createEntity();
+        ed.setComponents(player,
+                new Visual(),
+                new Animation(),
+                new Physics(),
+                new CharacterShape(1f, 5f, 150f),
+                new WalkDirection(),
+                new ViewDirection(),
+                new WalkSpeed(0f),
+                new TargetSpeed(0f),
+                new Accelleration(.1f, .1f),
+                new LookAtWalk(true),
+                new Hand());
+        // model
+        var spatial = assetManager.loadModel("Models/characters/YBot.j3o");  
+        spatial.setLocalScale(.01f);
+        spatial.setCullHint(Spatial.CullHint.Never); // since this spatial will presumably always be in focus
+        scene.attachChild(spatial);
+        // registering
+        getState(VisualState.class).link(player, spatial);
+        singleplayer = new SinglePlayerState(player);
+        getStateManager().attach(singleplayer);
         
         var gi = new AmbientLight(ColorRGBA.DarkGray);
         scene.addLight(gi);
@@ -115,28 +139,6 @@ public class ESGameState extends ESAppState {
         //updater.setMainLight(sun);
         //updater.addShadowRenderer(dlsr);
         skyControl.setEnabled(true);
-        
-        // create player entity
-        EntityId player = ed.createEntity();
-        ed.setComponents(player,
-                new Visual(),
-                new Animation(),
-                new CharacterShape(1f, 5f, 150f),
-                new WalkDirection(),
-                new ViewDirection(),
-                new WalkSpeed(0f),
-                new TargetSpeed(0f),
-                new Accelleration(.1f, .1f),
-                new LookAtWalk(true),
-                new Hand());
-        // model
-        var spatial = assetManager.loadModel("Models/characters/YBot.j3o");  
-        spatial.setLocalScale(.01f);
-        spatial.setCullHint(Spatial.CullHint.Never); // since this spatial will presumably always be in focus
-        // registering
-        getState(VisualState.class).link(player, spatial);
-        singleplayer = new SinglePlayerState(player);
-        getStateManager().attach(singleplayer);
         
     }
     @Override

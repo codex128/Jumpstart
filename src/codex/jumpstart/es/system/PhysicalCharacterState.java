@@ -33,7 +33,6 @@ public class PhysicalCharacterState extends ESAppState {
     }
     @Override
     protected void cleanup(Application app) {
-        super.cleanup();
         characters.release();
     }
     @Override
@@ -56,7 +55,7 @@ public class PhysicalCharacterState extends ESAppState {
         return getCharacterControl(fetch);
     }
     public BetterCharacterControl getCharacterControl(EntityId id) {
-        return visuals.getControl(id, BetterCharacterControl.class);
+        return visuals.get(id).getControl(BetterCharacterControl.class);
     }
     
     private void createCharacter(Entity e) {
