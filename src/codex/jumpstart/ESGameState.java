@@ -6,18 +6,17 @@ package codex.jumpstart;
 
 import codex.boost.scene.SceneGraphIterator;
 import codex.jumpstart.es.ESAppState;
-import codex.jumpstart.es.components.Accelleration;
 import codex.jumpstart.es.components.Animation;
 import codex.jumpstart.es.components.CharacterShape;
 import codex.jumpstart.es.components.Hand;
 import codex.jumpstart.es.components.LookAtWalk;
 import codex.jumpstart.es.components.Mass;
 import codex.jumpstart.es.components.Physics;
-import codex.jumpstart.es.components.TargetSpeed;
 import codex.jumpstart.es.components.ViewDirection;
 import codex.jumpstart.es.components.Visual;
 import codex.jumpstart.es.components.WalkDirection;
 import codex.jumpstart.es.components.WalkSpeed;
+import codex.jumpstart.es.registry.PhysicsRegistry;
 import codex.jumpstart.es.system.RigidBodyState;
 import codex.jumpstart.es.system.SinglePlayerState;
 import codex.jumpstart.es.system.VisualState;
@@ -141,6 +140,8 @@ public class ESGameState extends ESAppState {
         getState(VisualState.class).link(player, spatial);
         singleplayer = new SinglePlayerState(player);
         getStateManager().attach(singleplayer);
+        
+        getState(PhysicsRegistry.class).getPhysicsSpace().setGravity(new Vector3f(0f, -50f, 0f));
         
     }
     @Override

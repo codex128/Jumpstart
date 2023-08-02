@@ -65,6 +65,7 @@ public class SinglePlayerState extends ESAppState implements AnimEventListener,
         skin = animated.getControl(SkinningControl.class);
         layerControl = animated.getControl(AnimLayerControl.class);
         control = getState(PhysicalCharacterState.class).refresh(player);
+        control.setJumpForce(new Vector3f(0f, 3500f, 0f));
         getState(PhysicalCharacterWalkState.class).refresh(player).addListener(this);
         
         // camera
@@ -215,7 +216,7 @@ public class SinglePlayerState extends ESAppState implements AnimEventListener,
             if (!layerControl.get("gun").isActive() && value == InputState.Positive) {
                 layerControl.exit("move");
                 layerControl.get("gun").enter("draw-pistol-once");
-                //movement.setFaceWalkDirection(false);
+                set(new LookAtWalk(false));
                 set(new WalkSpeed(0f));
                 speedfactor = 0f;
             }
@@ -239,7 +240,6 @@ public class SinglePlayerState extends ESAppState implements AnimEventListener,
                     layerControl.exit("gun");
                     switchCameraModes();
                     speedfactor = 0f;
-                    set(new LookAtWalk(false));
                 }
             }
             else {
@@ -300,8 +300,9 @@ public class SinglePlayerState extends ESAppState implements AnimEventListener,
         Node holster = (Node)((Node)anim.getSpatial()).getChild("holster");
         holster.attachChild(getState(VisualState.class).get(get(Hand.class).getHeldEntity()));
     }
-    public void playGunShot() {
+    public void shoot() {
         //gunShotSound.playInstance();
+        
     }
     public void enableAimShifting(boolean enable) {
         aimShifting = enable;

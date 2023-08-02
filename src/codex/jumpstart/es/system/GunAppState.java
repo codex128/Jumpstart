@@ -6,6 +6,7 @@ package codex.jumpstart.es.system;
 
 import codex.jumpstart.es.ESAppState;
 import codex.jumpstart.es.components.Mass;
+import codex.jumpstart.util.ScenePicker;
 import com.jme3.app.Application;
 import com.jme3.math.Ray;
 import com.simsilica.es.EntityComponent;
@@ -31,12 +32,15 @@ public class GunAppState extends ESAppState {
     @Override
     protected void onDisable() {}
     
-    public void shoot(EntityId gun, Ray trajectory) {
+    public void shoot(EntityId gun, Ray trajectory, ScenePicker pick) {
         if (!isInitialized()) return;
         Mass mass = get(gun, Mass.class);
         if (mass == null) {
-            
+            shootBullet(gun, trajectory);
         }
+    }
+    private void shootBullet(EntityId gun, Ray trajectory) {
+        
     }
     
     private <T extends EntityComponent> T get(EntityId id, Class<T> type) {

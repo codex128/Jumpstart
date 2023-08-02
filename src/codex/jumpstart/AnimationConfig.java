@@ -57,7 +57,7 @@ public class AnimationConfig {
                 anim.action("shoot-pistol"),
                 Tweens.sequence(
                     Tweens.delay(.1),
-                    listener.tween(prefab.create("playGunShot"))
+                    listener.tween(prefab.create("shoot"))
                 )
             )
         )));
