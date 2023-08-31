@@ -35,13 +35,13 @@ public class ScenePicker {
     
     public CollisionResults collide(Collidable c) {
         CollisionResults res = new CollisionResults();
-        if (ignore == null) {
+        if (ignore == null || ignore.isEmpty()) {
             root.collideWith(c, res);
             return res;
         }
         var it = new SceneGraphIterator(root);
         for (var spatial : it) {
-            if (ignore.contains(spatial)) {
+            if (ignore.remove(spatial)) {
                 it.ignoreChildren();
                 continue;
             }

@@ -32,14 +32,18 @@ public class GunAppState extends ESAppState {
     @Override
     protected void onDisable() {}
     
-    public void shoot(EntityId gun, Ray trajectory, ScenePicker pick) {
+    public void shootBullet(EntityId gun, Ray trajectory, ScenePicker pick) {
         if (!isInitialized()) return;
-        Mass mass = get(gun, Mass.class);
-        if (mass == null) {
-            shootBullet(gun, trajectory);
+        var results = pick.collide(trajectory);
+        if (results.size() > 0) {
+            var closest = results.getClosestCollision();
+            var id = VisualState.fetchId(closest.getGeometry(), -1);
+            if (id != null) {
+                
+            }
         }
     }
-    private void shootBullet(EntityId gun, Ray trajectory) {
+    private void applyDamage(EntityId id, float damage) {
         
     }
     
